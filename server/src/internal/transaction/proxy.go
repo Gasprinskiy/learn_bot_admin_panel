@@ -2,7 +2,7 @@ package transaction
 
 import (
 	"context"
-	"lear_bot_admin_panel_server/server/src/internal/entity/global"
+	"lear_bot_admin_panel/src/internal/entity/global"
 )
 
 // CONTEXT NOT USED YET

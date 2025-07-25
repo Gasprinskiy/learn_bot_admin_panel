@@ -2,7 +2,7 @@ package sql_gen
 
 import (
 	"database/sql"
-	"lear_bot_admin_panel_server/server/src/internal/entity/global"
+	"lear_bot_admin_panel/src/internal/entity/global"
 
 	"github.com/jmoiron/sqlx"
 )

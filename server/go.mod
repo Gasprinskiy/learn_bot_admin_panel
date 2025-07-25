@@ -1,4 +1,4 @@
-module lear_bot_admin_panel_server
+module lear_bot_admin_panel
 
 go 1.24.3
 
