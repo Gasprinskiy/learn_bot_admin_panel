@@ -3,7 +3,7 @@ package genredis
 import (
 	"context"
 	"encoding/json"
-	"lear_bot_admin_panel/src/internal/entity/global"
+	"learn_bot_admin_panel/internal/entity/global"
 
 	"github.com/redis/go-redis/v9"
 )

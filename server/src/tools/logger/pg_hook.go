@@ -28,29 +28,27 @@ func (hook *PostgresHook) Fire(entry *logrus.Entry) error {
 	data := entry.Data
 
 	// Выделяем tg_id
-	tgIDValue, ok := data["tg_id"]
-	if !ok {
-		return fmt.Errorf("tg_id отсутствует в логах")
-	}
+	// tgIDValue, ok := data["tg_id"]
+	// if !ok {
+	// 	return fmt.Errorf("tg_id отсутствует в логах")
+	// }
 
-	var tgID int64
-	switch v := tgIDValue.(type) {
-	case int64:
-		tgID = v
-	case int:
-		tgID = int64(v)
-	case float64:
-		tgID = int64(v)
-	default:
-		return fmt.Errorf("tg_id имеет неподдерживаемый тип: %T", tgIDValue)
-	}
+	// var tgID int64
+	// switch v := tgIDValue.(type) {
+	// case int64:
+	// 	tgID = v
+	// case int:
+	// 	tgID = int64(v)
+	// case float64:
+	// 	tgID = int64(v)
+	// default:
+	// 	return fmt.Errorf("tg_id имеет неподдерживаемый тип: %T", tgIDValue)
+	// }
 
 	// Копируем всё кроме tg_id в additional_fields
 	additionalFields := make(logrus.Fields)
 	for k, v := range data {
-		if k != "tg_id" {
-			additionalFields[k] = v
-		}
+		additionalFields[k] = v
 	}
 
 	additionalJSON, err := json.Marshal(additionalFields)
@@ -59,9 +57,9 @@ func (hook *PostgresHook) Fire(entry *logrus.Entry) error {
 	}
 
 	_, err = hook.DB.Exec(`
-		INSERT INTO bot_logs (type, message, tg_id, additional_fields, time)
+		INSERT INTO admin_panel_logs (type, message, additional_fields, time)
 		VALUES ($1, $2, $3, $4, $5)
-	`, level, message, tgID, additionalJSON, timestamp)
+	`, level, message, additionalJSON, timestamp)
 
 	return err
 }

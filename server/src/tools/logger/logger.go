@@ -7,9 +7,6 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-var FileLogger *logrus.Logger
-var CombinedLogger *logrus.Logger
-
 type Logger struct {
 	File *logrus.Logger
 	Db   *logrus.Logger
