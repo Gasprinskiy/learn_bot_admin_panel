@@ -1,0 +1,22 @@
+services:
+  server:
+    build: ./server
+    container_name: panel_server
+    networks:
+      - bot_services
+    environment:
+      TZ: Asia/Tashkent
+      POSTGRES_URL: host=postgres user=$POSTGRES_USER password=$POSTGRES_PASSWORD dbname=$POSTGRES_DB port=$POSTGRES_INNER_PORT sslmode=disable
+      REDIS_PORT: $REDIS_PORT
+      BOT_TOKEN: $BOT_TOKEN
+      REDIS_PASSWORD: $REDIS_PASSWORD
+      REDIS_TTL: $REDIS_TTL
+      HTTP_SERVER_PORT: $HTTP_SERVER_PORT
+      SSE_TTL: $SSE_TTL
+      TG_API_PATH: $TG_API_PATH
+    ports:
+      - $HTTP_SERVER_PORT:$HTTP_SERVER_PORT
+
+networks:
+  bot_services:
+    external: true
