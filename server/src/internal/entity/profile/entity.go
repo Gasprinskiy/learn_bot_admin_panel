@@ -2,8 +2,6 @@ package profile
 
 import (
 	"learn_bot_admin_panel/tools/sql_null"
-
-	"github.com/google/uuid"
 )
 
 type User struct {
@@ -24,13 +22,14 @@ func (u User) IsPasswordSet() bool {
 	return u.Password.Valid
 }
 
-type UUIDResponse struct {
+type AuthUrlResponse struct {
 	AuthUrl string `json:"auth_url"`
 	UUID    string `json:"uu_id"`
 }
 
-func NewUUIDResponse() UUIDResponse {
-	return UUIDResponse{
-		UUID: uuid.NewString(),
+func NewAuthUrlResponse(uuID, authUrl string) AuthUrlResponse {
+	return AuthUrlResponse{
+		AuthUrl: authUrl,
+		UUID:    uuID,
 	}
 }

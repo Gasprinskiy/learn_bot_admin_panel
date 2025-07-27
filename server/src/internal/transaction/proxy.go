@@ -3,6 +3,7 @@ package transaction
 import (
 	"context"
 	"learn_bot_admin_panel/internal/entity/global"
+	"learn_bot_admin_panel/tools/logger"
 )
 
 // CONTEXT NOT USED YET
@@ -12,7 +13,7 @@ type ReturnErrFunc func(ctx context.Context) error
 
 func RunInTx[T any](
 	ctx context.Context,
-	// log *logrus.Logger,
+	log *logger.Logger,
 	sessionManager SessionManager,
 	f LoadDataFunc[T],
 ) (T, error) {
@@ -21,7 +22,7 @@ func RunInTx[T any](
 	// создать сессию и открыть транзакцию
 	ts := sessionManager.CreateSession()
 	if err := ts.Start(); err != nil {
-		// log.Errorln(fmt.Sprintf("ошибка открытия транзакции; ошибка: %v", err))
+		log.Db.Errorln("ошибка открытия транзакции; ошибка:", err)
 		return zero, global.ErrInternalError
 	}
 	defer ts.Rollback()

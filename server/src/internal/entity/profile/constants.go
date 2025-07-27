@@ -37,3 +37,7 @@ func (s AccessRight) HasInAccessRightMap() bool {
 	_, exists := AccessRightCheckMap[s]
 	return exists
 }
+
+const (
+	AuthSuccessfulyMessage = "Авторизация прошла успешно, можете вернутся обратно!"
+)
