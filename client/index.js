@@ -37,9 +37,15 @@ async function listen(authID) {
 }
 
 doit.addEventListener("click", async () => {
-  const response = await getId()
-  await listen(response.uu_id)
-  console.log("response: ", response);
+  // const response = await getId()
+  // await listen(response.uu_id)
+  // console.log("response: ", response);
 
-  freakingWindow = window.open(response.auth_url, "_blank")
+  // freakingWindow = window.open(response.auth_url, "_blank")
+
+  const popup = window.open(
+    'https://t.me/samgasper', // URL для авторизации
+    'authPopup',                       // имя окна
+    'width=500,height=600,left=100'            // параметры окна
+  );
 })
