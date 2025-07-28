@@ -17,7 +17,7 @@ type authCache struct {
 	ttl time.Duration
 }
 
-func NewUserCache(db *redis.Client, ttl time.Duration) repository.AuthCache {
+func NewAuthCache(db *redis.Client, ttl time.Duration) repository.AuthCache {
 	return &authCache{db, ttl}
 }
 
