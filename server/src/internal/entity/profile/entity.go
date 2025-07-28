@@ -14,6 +14,16 @@ type User struct {
 	Access     AccessRight         `json:"access_right" db:"access_right"`
 }
 
+type UserFirstLoginAnswer struct {
+	IsPasswordSet bool `json:"is_password_set"`
+}
+
+func (u User) NewUserFirstLoginAnswer() UserFirstLoginAnswer {
+	return UserFirstLoginAnswer{
+		IsPasswordSet: u.IsPasswordSet(),
+	}
+}
+
 func (u User) IsActivated() bool {
 	return u.TgID.Valid
 }
