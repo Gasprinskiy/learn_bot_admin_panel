@@ -13,9 +13,14 @@
     "vite-tsconfig-paths": "^5.1.4",
     "vue": "^3.5.17",
     "vue-router": "^4.5.1",
-    "eslint": "^9.23.0"
+    "eslint": "^9.23.0",
+    "@vuelidate/core": "^2.0.3",
+    "@vuelidate/validators": "^2.0.4"
   },
   "devDependencies": {
+    "@vicons/ionicons5": "^0.13.0",
+    "@vicons/material": "^0.13.0",
+    "naive-ui": "^2.41.0",
     "@vitejs/plugin-vue": "^6.0.0",
     "@vue/tsconfig": "^0.7.0",
     "typescript": "~5.8.3",
