@@ -120,11 +120,21 @@ func (u *Profile) WaitTgAuthVerify(ctx context.Context, authKey string) ([]byte,
 		return data, global.ErrExpired
 
 	case authChanel := <-authSession.Chan:
+		userData := authChanel.User
+
 		if authChanel.Error != nil {
 			return data, authChanel.Error
 		}
 
-		return json.Marshal(authChanel.User)
+		if userData.IsPasswordSet() {
+			err := u.ri.Repository.AuthCache.SetTempUserData(ctx, authKey, userData)
+			if err != nil {
+				u.log.Db.Errorln("не удалось записать временные данные пользователя в кеш:", err)
+				return data, global.ErrInternalError
+			}
+		}
+
+		return json.Marshal(userData.NewUserFirstLoginAnswer())
 
 	case <-time.After(u.config.SSETTL):
 		return data, global.ErrExpired
