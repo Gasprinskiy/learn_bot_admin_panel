@@ -37,8 +37,21 @@ func NewProfileHandler(
 		)
 
 		group.GET(
-			"/listen",
+			"/listen/:temp_id",
 			handler.HandleAuthListen,
+		)
+
+		group.POST(
+			"/login",
+			handler.HandleLogin,
+		)
+
+		group.POST(
+			"/create_password",
+		)
+
+		group.PATCH(
+			"/change_password",
 		)
 	}
 }
@@ -54,7 +67,7 @@ func (h *ProfileHandler) GetAuthData(gctx *gin.Context) {
 }
 
 func (h *ProfileHandler) HandleAuthListen(gctx *gin.Context) {
-	authKey := gctx.Query("auth_id")
+	authKey := gctx.Param("temp_id")
 	if authKey == "" {
 		gctx.JSON(http.StatusBadRequest, gin.H{"message": global.ErrInvalidParam})
 		return
@@ -72,13 +85,32 @@ func (h *ProfileHandler) HandleAuthListen(gctx *gin.Context) {
 
 	userData, err := h.ui.Usecase.Profile.WaitTgAuthVerify(gctx.Request.Context(), authKey)
 	if err != nil {
-		fmt.Fprintf(gctx.Writer, "event: error\ndata: %s\n\n", err.Error())
+		fmt.Fprint(gctx.Writer, global.SSEEventMessage(global.SSEErrorEvent, err.Error()))
 		flusher.Flush()
 		return
 	}
 
-	fmt.Fprintf(gctx.Writer, "event: done\ndata: %s\n\n", userData)
+	fmt.Fprint(gctx.Writer, global.SSEEventMessage(global.SSEDoneEvent, userData))
 	flusher.Flush()
+}
+
+func (h *ProfileHandler) HandleLogin(gctx *gin.Context) {
+	authID := gctx.Query("temp_id")
+	if authID != "" {
+		userDataWithToken, err := h.ui.Usecase.Jwt.GenerateTokenByTempAuthData(gctx.Request.Context(), authID)
+		if err != nil {
+			gctx.JSON(global.ErrStatusCodes[err], gin.H{"message": err.Error()})
+		}
+
+		h.setAccessToken(gctx, userDataWithToken.Token)
+
+		gctx.JSON(http.StatusOK, userDataWithToken.UserData)
+	}
+}
+
+func (h *ProfileHandler) setAccessToken(gctx *gin.Context, token string) {
+	lifeTime := int(h.config.JwtSecretTTL.Milliseconds())
+	gctx.SetCookie("access_token", token, lifeTime, "/", "", true, true)
 }
 
 // authSession, exists := h.authChan.Read(authID)
