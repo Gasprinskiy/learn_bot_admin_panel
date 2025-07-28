@@ -59,6 +59,7 @@ func (ac *AuthChan) Create(key string, expiryDur time.Duration) {
 		Chan:   make(chan SessionChanel, 1),
 		Expiry: time.Now().Add(expiryDur),
 	}
+	go ac.sleepCleanUp(key, expiryDur)
 }
 
 func (ac *AuthChan) CleanUp(key string) {
@@ -72,4 +73,9 @@ func (ac *AuthChan) CleanUp(key string) {
 
 	close(session.Chan)
 	delete(ac.sessions, key)
+}
+
+func (ac *AuthChan) sleepCleanUp(key string, expiryDur time.Duration) {
+	time.Sleep(expiryDur + (time.Second * 1))
+	ac.CleanUp(key)
 }
