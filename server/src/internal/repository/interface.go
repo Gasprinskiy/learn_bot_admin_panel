@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"context"
 	"learn_bot_admin_panel/internal/entity/profile"
 	"learn_bot_admin_panel/internal/entity/telegram"
 	"learn_bot_admin_panel/internal/transaction"
@@ -14,4 +15,9 @@ type Profile interface {
 
 type TgBot interface {
 	GetBotInfo() (telegram.BotInfoResponse, error)
+}
+
+type AuthCache interface {
+	SetTempUserData(ctx context.Context, tempKey string, user profile.User) error
+	GetTempUserData(ctx context.Context, tempKey string) (profile.User, error)
 }

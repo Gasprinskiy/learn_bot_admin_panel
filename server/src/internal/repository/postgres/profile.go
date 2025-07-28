@@ -25,7 +25,8 @@ func (r *profileRepo) FindProfileByTGUserName(ts transaction.Session, userName s
 			u.first_name,
 			u.last_name,
 			u.tg_user_name,
-			u.tg_id
+			u.tg_id,
+			u.password
 		FROM admin_panel_users u
     	JOIN admin_panel_acces_rights ar ON (ar.ar_id = u.ar_id)
 		WHERE u.tg_user_name = $1
