@@ -58,7 +58,7 @@ func (hook *PostgresHook) Fire(entry *logrus.Entry) error {
 
 	_, err = hook.DB.Exec(`
 		INSERT INTO admin_panel_logs (type, message, additional_fields, time)
-		VALUES ($1, $2, $3, $4, $5)
+		VALUES ($1, $2, $3, $4)
 	`, level, message, additionalJSON, timestamp)
 
 	return err
