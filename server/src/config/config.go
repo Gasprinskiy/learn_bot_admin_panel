@@ -41,7 +41,7 @@ func NewConfig() *Config {
 
 	return &Config{
 		PostgresURL: os.Getenv("POSTGRES_URL"),
-		TgApiURL:    os.Getenv("TG_API_PATH"),
+		TgApiURL:    os.Getenv("TG_API_URL"),
 		BotToken:    os.Getenv("BOT_TOKEN"),
 		RedisPass:   os.Getenv("REDIS_PASSWORD"),
 		// JwtSecret:   os.Getenv("JWT_SECRET"),
