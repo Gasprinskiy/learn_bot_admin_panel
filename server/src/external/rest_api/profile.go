@@ -13,22 +13,22 @@ import (
 
 type ProfileHandler struct {
 	ui     *uimport.UsecaseImport
-	gin    *gin.Engine
+	router *gin.RouterGroup
 	config *config.Config
 }
 
 func NewProfileHandler(
 	ui *uimport.UsecaseImport,
-	gin *gin.Engine,
+	router *gin.RouterGroup,
 	config *config.Config,
 ) {
 	handler := ProfileHandler{
 		ui,
-		gin,
+		router,
 		config,
 	}
 
-	group := handler.gin.Group("/auth")
+	group := handler.router.Group("/auth")
 
 	{
 		group.GET(
@@ -85,12 +85,12 @@ func (h *ProfileHandler) HandleAuthListen(gctx *gin.Context) {
 
 	userData, err := h.ui.Usecase.Profile.WaitTgAuthVerify(gctx.Request.Context(), authKey)
 	if err != nil {
-		fmt.Fprint(gctx.Writer, global.SSEEventMessage(global.SSEErrorEvent, err.Error()))
+		fmt.Fprint(gctx.Writer, global.SSEErrorEventMessage(global.ErrStatusCodes[err]))
 		flusher.Flush()
 		return
 	}
 
-	fmt.Fprint(gctx.Writer, global.SSEEventMessage(global.SSEDoneEvent, userData))
+	fmt.Fprint(gctx.Writer, global.SSEEventMessage(userData))
 	flusher.Flush()
 }
 

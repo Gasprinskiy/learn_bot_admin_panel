@@ -126,12 +126,10 @@ func (u *Profile) WaitTgAuthVerify(ctx context.Context, authKey string) ([]byte,
 			return data, authChanel.Error
 		}
 
-		if userData.IsPasswordSet() {
-			err := u.ri.Repository.AuthCache.SetTempUserData(ctx, authKey, userData)
-			if err != nil {
-				u.log.Db.Errorln("не удалось записать временные данные пользователя в кеш:", err)
-				return data, global.ErrInternalError
-			}
+		err := u.ri.Repository.AuthCache.SetTempUserData(ctx, authKey, userData)
+		if err != nil {
+			u.log.Db.Errorln("не удалось записать временные данные пользователя в кеш:", err)
+			return data, global.ErrInternalError
 		}
 
 		return json.Marshal(userData.NewUserFirstLoginAnswer())

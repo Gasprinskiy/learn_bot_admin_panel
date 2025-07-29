@@ -83,6 +83,7 @@ func main() {
 	router := gin.Default()
 	router.Use(cors.New(ginConfig))
 
+	v1Router := router.Group("/api/v1")
 	srv := &http.Server{
 		Addr:    config.ServerPort,
 		Handler: router,
@@ -97,7 +98,7 @@ func main() {
 	ui := uimport.NewUsecaseImport(ri, logger, authChan, config)
 
 	// инициализация rest handler
-	rest_api.NewProfileHandler(ui, router, config)
+	rest_api.NewProfileHandler(ui, v1Router, config)
 
 	// инициализация tg bot handler
 	bot_api.NewBotProfileHandler(ui, b, config, logger, sessionManager)
