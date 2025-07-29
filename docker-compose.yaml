@@ -13,7 +13,7 @@ services:
       REDIS_TTL: $REDIS_TTL
       HTTP_SERVER_PORT: $HTTP_SERVER_PORT
       SSE_TTL: $SSE_TTL
-      TG_API_PATH: $TG_API_PATH
+      TG_API_URL: $TG_API_URL
     ports:
       - $HTTP_SERVER_PORT:$HTTP_SERVER_PORT
 
