@@ -1,17 +1,13 @@
-import { defineAsyncComponent } from 'vue';
-import type { Component } from 'vue';
 import { AuthMethod } from './types';
 
-export const AuthComponentMap: Record<AuthMethod, () => Component> = {
-  [AuthMethod.STANDART]: () => {
-    return defineAsyncComponent(() => {
-      return import('./components/standart_auth/StandartAuth.vue');
-    });
-  },
+export const AuthMethodPathMap: Record<AuthMethod, string> = {
+  [AuthMethod.STANDART]: 'elegram-auth',
+  [AuthMethod.TELEGRAM]: 'standart-auth',
+} as const;
 
-  [AuthMethod.TELEGRAM]: () => {
-    return defineAsyncComponent(() => {
-      return import('./components/tg_auth/TgAuth.vue');
-    });
-  },
+export const AuthTempDataInjectKey = 'auth_temp_data' as const;
+export const ChildRouteNameMap: Record<string, boolean> = {
+  'telegram-auth': true,
+  'standart-auth': true,
+  'set-pass': true,
 };

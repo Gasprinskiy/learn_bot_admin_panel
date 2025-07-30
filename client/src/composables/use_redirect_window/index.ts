@@ -1,7 +1,7 @@
 import { shallowRef } from 'vue';
-import type { UseRedirectWindowParams } from './types';
+import type { ScreenWithAvailCoords, UseRedirectWindowParams, UseRedirectWindowReturnType } from './types';
 
-export function useRedirectWindow(params: UseRedirectWindowParams) {
+export function useRedirectWindow(params: UseRedirectWindowParams): UseRedirectWindowReturnType {
   const { name, width, height } = params;
 
   const windowWidth = width || 500;
@@ -20,11 +20,15 @@ export function useRedirectWindow(params: UseRedirectWindowParams) {
   }
 
   function open(url: string) {
-    const screenWidth = window.screen.availWidth;
-    const screenHeight = window.screen.availHeight;
+    const screen: ScreenWithAvailCoords = window.screen;
 
-    const centerX = window.screen.availLeft! + (screenWidth - windowWidth) / 2;
-    const centerY = window.screen.availTop! + (screenHeight - windowHeight) / 2;
+    const screenWidth = screen.availWidth;
+    const screenHeight = screen.availHeight;
+    const screenLeft = screen.availLeft || 0;
+    const screenRight = screen.availTop || 0;
+
+    const centerX = screenLeft + (screenWidth - windowWidth) / 2;
+    const centerY = screenRight + (screenHeight - windowHeight) / 2;
 
     windowProxy.value = window.open(
       url,

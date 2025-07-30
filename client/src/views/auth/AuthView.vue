@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import type { Component } from 'vue';
-import { computed, shallowRef } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { computed, provide, ref, shallowRef } from 'vue';
 import { NCard, NButton, NIcon, NDivider, NAlert } from 'naive-ui';
 import { TelegramOutlined, PasswordOutlined, ArrowBackIosOutlined } from '@vicons/material';
 
@@ -8,19 +8,27 @@ import type { AuthTempData, UserFirstLoginAnswer } from '@/shared/types/profile'
 import { useAuth } from '@/composables/use_auth';
 
 import { AuthMethod } from './types';
-import { AuthComponentMap } from './constants';
+import { AuthMethodPathMap, AuthTempDataInjectKey, ChildRouteNameMap } from './constants';
 
-const { tempDataLoading, tgAuth, closeEventSource, redirectWindow } = useAuth();
+const route = useRoute();
+const router = useRouter()
+const { tempDataLoading, tgAuth } = useAuth();
 
-const choseMethod = shallowRef<AuthMethod | null>(null);
-const authComponent = shallowRef<Component | null>(null);
 const authTempData = shallowRef<AuthTempData | null>();
 
-const authMethodChosen = computed<boolean>(() => authComponent.value !== null);
+const childRouteActive = computed<boolean>(() => route.name ? (ChildRouteNameMap[route.name.toString()] || false) : false);
+const hasBackAction = computed<boolean>(() => Boolean(route.meta?.hasBackAction));
 
-function onAuthMehtodChose(method: AuthMethod) {
-  choseMethod.value = method;
-  authComponent.value = AuthComponentMap[method]();
+provide(AuthTempDataInjectKey, authTempData);
+
+async function onAuthMehtodChose(method: AuthMethod) {
+  await router.push({
+    name: AuthMethodPathMap[method],
+  });
+}
+
+async function resetAuthMethod() {
+  await router.replace('/auth');
 }
 
 async function onChoseTgAsAuthMethod() {
@@ -35,12 +43,6 @@ async function onChoseTgAsAuthMethod() {
     authErrorAnswer: resetAuthMethod,
   });
 }
-
-function resetAuthMethod() {
-  choseMethod.value = null;
-  authComponent.value = null;
-  closeEventSource();
-}
 </script>
 
 <template>
@@ -50,7 +52,7 @@ function resetAuthMethod() {
         <div class="auth-view__card_head">
           <NButton
             class="auth-view__card_back-button"
-            :class="{ hidded: !authMethodChosen }"
+            :class="{ hidded: !hasBackAction }"
             type="primary"
             size="small"
             quaternary
@@ -70,18 +72,7 @@ function resetAuthMethod() {
       </template>
 
       <template #default>
-        <div
-          v-if="authMethodChosen"
-          class="auth-view__card_chosen-component"
-        >
-          <component
-            :is="authComponent"
-            v-bind="authTempData"
-            v-on="{
-              onLinkClick: () => redirectWindow.open(authTempData!.auth_url),
-            }"
-          />
-        </div>
+        <RouterView v-if="childRouteActive" />
 
         <div
           v-else

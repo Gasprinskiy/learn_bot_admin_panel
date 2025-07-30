@@ -1,14 +1,17 @@
 <script lang="ts" setup>
-import { computed, onBeforeUnmount, onMounted, shallowRef } from 'vue';
+import { computed, inject, onBeforeUnmount, onMounted, shallowRef } from 'vue';
+import type { ShallowRef } from 'vue';
 import { NButton, NDivider, NQrCode, NSpace } from 'naive-ui';
 
+import { useAuth } from '@/composables/use_auth';
 import { useConfig } from '@/composables/use_config';
 import type { AuthTempData } from '@/shared/types/profile';
 
-import type { TgAuthEmits } from './types';
+import { AuthTempDataInjectKey } from '../../constants';
 
-const props = defineProps<AuthTempData>();
-const emit = defineEmits<TgAuthEmits>();
+const props = inject<ShallowRef<AuthTempData>>(AuthTempDataInjectKey);
+
+const { redirectWindow, closeRedirectWindow, closeEventSource } = useAuth();
 
 const { SSETTL } = useConfig();
 
@@ -38,6 +41,8 @@ function startCountDown() {
 
 onMounted(startCountDown);
 onBeforeUnmount(() => {
+  closeRedirectWindow();
+  closeEventSource();
   clearInterval(countDownIntervalId.value);
 });
 </script>
@@ -46,7 +51,7 @@ onBeforeUnmount(() => {
   <div class="tg_auth">
     <NButton
       type="primary"
-      @click="emit('onLinkClick')"
+      @click="redirectWindow!.open(props!.auth_url)"
     >
       Перейдите по ссылке
     </NButton>
@@ -61,7 +66,7 @@ onBeforeUnmount(() => {
         <NQrCode
           style="padding: 0;"
           :size="200"
-          :value="props.auth_url"
+          :value="props!.auth_url"
           error-correction-level="H"
         />
       </div>
