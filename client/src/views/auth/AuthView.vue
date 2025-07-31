@@ -1,25 +1,20 @@
 <script setup lang="ts">
 import { useRoute, useRouter } from 'vue-router';
-import { computed, provide, ref, shallowRef } from 'vue';
+import { computed } from 'vue';
 import { NCard, NButton, NIcon, NDivider, NAlert } from 'naive-ui';
 import { TelegramOutlined, PasswordOutlined, ArrowBackIosOutlined } from '@vicons/material';
 
-import type { AuthTempData, UserFirstLoginAnswer } from '@/shared/types/profile';
 import { useAuth } from '@/composables/use_auth';
 
 import { AuthMethod } from './types';
-import { AuthMethodPathMap, AuthTempDataInjectKey, ChildRouteNameMap } from './constants';
+import { AuthMethodPathMap, ChildRouteNameMap } from './constants';
 
 const route = useRoute();
-const router = useRouter()
+const router = useRouter();
 const { tempDataLoading, tgAuth } = useAuth();
-
-const authTempData = shallowRef<AuthTempData | null>();
 
 const childRouteActive = computed<boolean>(() => route.name ? (ChildRouteNameMap[route.name.toString()] || false) : false);
 const hasBackAction = computed<boolean>(() => Boolean(route.meta?.hasBackAction));
-
-provide(AuthTempDataInjectKey, authTempData);
 
 async function onAuthMehtodChose(method: AuthMethod) {
   await router.push({
@@ -33,14 +28,8 @@ async function resetAuthMethod() {
 
 async function onChoseTgAsAuthMethod() {
   await tgAuth({
-    onTempDataCreate: (data: AuthTempData) => {
-      authTempData.value = data;
-      onAuthMehtodChose(AuthMethod.TELEGRAM);
-    },
-    authAnswer: (firstLoginAnswer: UserFirstLoginAnswer) => {
-      console.log('firstLoginAnswer: ', firstLoginAnswer);
-    },
-    authErrorAnswer: resetAuthMethod,
+    onTempDataCreate: () => onAuthMehtodChose(AuthMethod.TELEGRAM),
+    onRequestError: resetAuthMethod,
   });
 }
 </script>

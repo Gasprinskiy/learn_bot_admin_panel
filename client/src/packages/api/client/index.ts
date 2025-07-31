@@ -7,6 +7,7 @@ const { ApiURL } = useConfig();
 
 const $api = ofetch.create({
   baseURL: ApiURL,
+  credentials: 'include',
   headers: {
     Accept: 'application/json',
   },

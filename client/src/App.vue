@@ -11,17 +11,9 @@ import {
 import AppHeader from '@/components/header/AppHeader.vue';
 import AppRouterView from '@/AppRouterView.vue';
 import { useAppTheme } from '@/composables/use_app_theme';
-import { onBeforeMount, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
 
 const { currentTheme } = useAppTheme();
 // import ModalProvider from '@/components/modal-provier/ModalProvider.vue';
-
-onBeforeMount(() => {
-  const router = useRouter();
-
-  router.push('/auth');
-});
 </script>
 
 <template>

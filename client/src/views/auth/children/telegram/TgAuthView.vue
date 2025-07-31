@@ -1,17 +1,12 @@
 <script lang="ts" setup>
-import { computed, inject, onBeforeUnmount, onMounted, shallowRef } from 'vue';
-import type { ShallowRef } from 'vue';
-import { NButton, NDivider, NQrCode, NSpace } from 'naive-ui';
+import { computed, onBeforeUnmount, onMounted, shallowRef } from 'vue';
+import { NButton, NDivider, NQrCode, NSpace, useMessage } from 'naive-ui';
 
 import { useAuth } from '@/composables/use_auth';
 import { useConfig } from '@/composables/use_config';
-import type { AuthTempData } from '@/shared/types/profile';
 
-import { AuthTempDataInjectKey } from '../../constants';
-
-const props = inject<ShallowRef<AuthTempData>>(AuthTempDataInjectKey);
-
-const { redirectWindow, closeRedirectWindow, closeEventSource } = useAuth();
+const message = useMessage();
+const { redirectWindow, tempData, closeRedirectWindow, closeEventSource } = useAuth();
 
 const { SSETTL } = useConfig();
 
@@ -39,7 +34,14 @@ function startCountDown() {
   }, 1000);
 }
 
-onMounted(startCountDown);
+onMounted(() => {
+  if (!tempData.value) {
+    message.error('Ошибка при генерации ссылки', {
+      duration: 3000,
+    });
+  }
+  startCountDown();
+});
 onBeforeUnmount(() => {
   closeRedirectWindow();
   closeEventSource();
@@ -51,7 +53,7 @@ onBeforeUnmount(() => {
   <div class="tg_auth">
     <NButton
       type="primary"
-      @click="redirectWindow!.open(props!.auth_url)"
+      @click="redirectWindow!.open(tempData!.auth_url)"
     >
       Перейдите по ссылке
     </NButton>
@@ -66,7 +68,7 @@ onBeforeUnmount(() => {
         <NQrCode
           style="padding: 0;"
           :size="200"
-          :value="props!.auth_url"
+          :value="tempData!.auth_url"
           error-correction-level="H"
         />
       </div>

@@ -1,18 +1,24 @@
-import type { AuthTempData, User, UserFirstLoginAnswer } from '@/shared/types/profile';
-import type { UseRedirectWindowReturnType } from '../use_redirect_window/types';
+import type { AuthTempData, LoginParams, UserShortInfo } from '@/shared/types/profile';
+import type { UseRedirectWindowReturnType } from '@/composables/use_redirect_window/types';
 
 export interface UseAuthState {
-  user: User | null;
+  user: UserShortInfo | null;
   redirectWindow: UseRedirectWindowReturnType | null;
   eventSource: EventSource | null;
+  tempData: AuthTempData | null;
 }
 
 export interface ListenTgAuthSourceParams {
   authId: string;
-  authAnswer: (firstLoginAnswer: UserFirstLoginAnswer) => void;
-  authErrorAnswer: () => void;
+  onRequestError: () => void;
 }
 
 export interface TgAuthParams extends Omit<ListenTgAuthSourceParams, 'authId'> {
-  onTempDataCreate: (tempData: AuthTempData) => void;
+  onTempDataCreate: () => void;
+}
+
+export interface LoginCommonParams {
+  tempID: string | null;
+  loginParams: LoginParams | null;
+  isPassowrdSet: boolean;
 }

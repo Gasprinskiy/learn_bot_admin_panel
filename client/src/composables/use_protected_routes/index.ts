@@ -14,7 +14,7 @@ export function useProtectedRoutes() {
   const router = useRouter();
 
   async function buildRoutesByAccessRight(accRight: AccessRight) {
-    const routesToAdd = RoutesByAccessRightList[accRight];
+    const routesToAdd = RoutesByAccessRightList[accRight] || [];
     if (!routesToAdd) {
       console.error('no routes found by acces right');
     }

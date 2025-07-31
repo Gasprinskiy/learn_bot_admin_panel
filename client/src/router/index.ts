@@ -1,9 +1,11 @@
 import { createRouter, createWebHistory } from 'vue-router';
 
 import AuthView from '@/views/auth/AuthView.vue';
-import SetPassView from '@/views/set_pass/SetPassView.vue';
 import NotFoundView from '@/views/not_found/NotFoundView.vue';
+
 import TgAuthView from '@/views/auth/children/telegram/TgAuthView.vue';
+import StandartAuthView from '@/views/auth/children/standart_auth/StandartAuthView.vue';
+import SetPassView from '@/views/auth/children/set_pass/SetPassView.vue';
 
 const router = createRouter({
   history: createWebHistory(),
@@ -24,7 +26,7 @@ const router = createRouter({
         {
           name: 'standart-auth',
           path: 'standart',
-          component: TgAuthView,
+          component: StandartAuthView,
           meta: {
             hasBackAction: true,
           },
@@ -37,7 +39,7 @@ const router = createRouter({
       ],
     },
     {
-      path: '/:pathMatch(.*)*', // Catch-all route for 404
+      path: '/:pathMatch(.*)*',
       name: 'NotFound',
       component: NotFoundView,
     },

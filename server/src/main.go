@@ -77,13 +77,19 @@ func main() {
 	defer b.Close(ctx)
 
 	// Настройка HTTP-сервера
-	ginConfig := cors.DefaultConfig()
-	ginConfig.AllowAllOrigins = true
+	ginConfig := cors.Config{
+		AllowOrigins:     []string{"http://admin-panel.local:3000", "https://admin-panel.local:3000"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+	}
 
 	router := gin.Default()
 	router.Use(cors.New(ginConfig))
 
 	v1Router := router.Group("/api/v1")
+	v1Router.Use(cors.New(ginConfig))
 	srv := &http.Server{
 		Addr:    config.ServerPort,
 		Handler: router,
