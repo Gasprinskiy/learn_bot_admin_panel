@@ -19,10 +19,11 @@ var (
 )
 
 var ErrStatusCodes = map[error]int{
-	ErrNoData:        http.StatusNotFound,
-	ErrInternalError: http.StatusInternalServerError,
-	ErrExpired:       http.StatusGone,
-	// ErrInvalidParam:           http.StatusBadRequest,
+	ErrNoData:           http.StatusNotFound,
+	ErrInternalError:    http.StatusInternalServerError,
+	ErrPermissionDenied: http.StatusUnauthorized,
+	ErrInvalidParam:     http.StatusBadRequest,
+	ErrExpired:          http.StatusGone,
 	// ErrInvalidLoginOrPassword: http.StatusUnauthorized,
 	// ErrUserAllreadyExists:     http.StatusConflict,
 	// ErrNotAllowedToUse:        http.StatusUnauthorized,

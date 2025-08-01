@@ -80,7 +80,7 @@ func main() {
 	ginConfig := cors.Config{
 		AllowOrigins:     []string{"http://admin-panel.local:3000", "https://admin-panel.local:3000"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization", "Device-ID"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
 	}

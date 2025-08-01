@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"learn_bot_admin_panel/config"
 	"learn_bot_admin_panel/internal/entity/global"
+	"learn_bot_admin_panel/tools/gin_gen"
 
 	"learn_bot_admin_panel/uimport"
 	"net/http"
@@ -64,7 +65,7 @@ func NewProfileHandler(
 func (h *ProfileHandler) GetAuthData(gctx *gin.Context) {
 	authUrlResponse, err := h.ui.Usecase.Profile.CreateAuthUrlResponse()
 	if err != nil {
-		gctx.JSON(global.ErrStatusCodes[err], gin.H{"message": err.Error()})
+		gin_gen.HandleError(gctx, err)
 		return
 	}
 
@@ -74,13 +75,13 @@ func (h *ProfileHandler) GetAuthData(gctx *gin.Context) {
 func (h *ProfileHandler) HandleAuthListen(gctx *gin.Context) {
 	authKey := gctx.Param("temp_id")
 	if authKey == "" {
-		gctx.JSON(http.StatusBadRequest, gin.H{"message": global.ErrInvalidParam})
+		gin_gen.HandleError(gctx, global.ErrInvalidParam)
 		return
 	}
 
 	flusher, ok := gctx.Writer.(http.Flusher)
 	if !ok {
-		gctx.JSON(http.StatusInternalServerError, gin.H{"message": global.ErrInternalError})
+		gin_gen.HandleError(gctx, global.ErrInternalError)
 		return
 	}
 
@@ -104,7 +105,8 @@ func (h *ProfileHandler) HandleLogin(gctx *gin.Context) {
 	if authID != "" {
 		userDataWithToken, err := h.ui.Usecase.Jwt.GenerateTokenByTempAuthData(gctx.Request.Context(), authID)
 		if err != nil {
-			gctx.JSON(global.ErrStatusCodes[err], gin.H{"message": err.Error()})
+			gin_gen.HandleError(gctx, err)
+			return
 		}
 
 		h.setAccessToken(gctx, userDataWithToken.Token)
@@ -116,7 +118,7 @@ func (h *ProfileHandler) HandleLogin(gctx *gin.Context) {
 func (h *ProfileHandler) HandleCheck(gctx *gin.Context) {
 	token, err := gctx.Cookie("access_token")
 	if err != nil {
-		gctx.JSON(http.StatusUnauthorized, gin.H{"message": global.ErrPermissionDenied.Error()})
+		gin_gen.HandleError(gctx, global.ErrPermissionDenied)
 		return
 	}
 
@@ -126,7 +128,7 @@ func (h *ProfileHandler) HandleCheck(gctx *gin.Context) {
 			h.removeAccessToken(gctx, token)
 		}
 
-		gctx.JSON(global.ErrStatusCodes[err], gin.H{"message": err.Error()})
+		gin_gen.HandleError(gctx, err)
 		return
 	}
 
@@ -141,31 +143,3 @@ func (h *ProfileHandler) setAccessToken(gctx *gin.Context, token string) {
 func (h *ProfileHandler) removeAccessToken(gctx *gin.Context, token string) {
 	gctx.SetCookie("access_token", token, -1, "/", "admin-panel.local", false, true)
 }
-
-// authSession, exists := h.authChan.Read(authID)
-// if !exists {
-// 	gctx.JSON(http.StatusGone, gin.H{"message": global.ErrExpired})
-// 	return
-// }
-
-// defer h.authChan.CleanUp(authID)
-
-// select {
-// case <-gctx.Request.Context().Done():
-// 	return
-
-// case userData := <-authSession.Chan:
-// 	jsonData, err := json.Marshal(userData)
-// 	if err != nil {
-// 		gctx.JSON(http.StatusInternalServerError, gin.H{"message": global.ErrInternalError})
-// 		return
-// 	}
-
-// 	fmt.Fprintf(gctx.Writer, "event: done\ndata: %s\n\n", jsonData)
-// 	flusher.Flush()
-// 	return
-
-// case <-time.After(h.config.SSETTL):
-// 	gctx.JSON(http.StatusGone, gin.H{"message": global.ErrExpired})
-// 	return
-// }
