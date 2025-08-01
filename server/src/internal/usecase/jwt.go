@@ -8,6 +8,7 @@ import (
 	"learn_bot_admin_panel/internal/entity/profile"
 	"learn_bot_admin_panel/rimport"
 	"learn_bot_admin_panel/tools/logger"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -45,20 +46,28 @@ func (u *Jwt) GenerateToken(userID int, accRight profile.AccessRight) (string, e
 	return result, err
 }
 
-func (u *Jwt) ParseToken(tokenString string) (*app_jwt.Claims, error) {
+func (u *Jwt) ParseToken(tokenString string) (app_jwt.Claims, error) {
+	var zero app_jwt.Claims
+
 	token, err := jwt.ParseWithClaims(tokenString, &app_jwt.Claims{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(u.config.JwtSecret), nil
 	})
 
 	if err != nil {
-		return nil, err
+		errString := err.Error()
+		if strings.Contains(errString, jwt.ErrTokenExpired.Error()) {
+			return zero, global.ErrExpired
+		}
+		u.log.Db.Errorln("не спарсить токен пользователя:", err)
+		return zero, global.ErrInternalError
 	}
 
 	if claims, ok := token.Claims.(*app_jwt.Claims); ok && token.Valid {
-		return claims, nil
+		return *claims, nil
 	}
 
-	return nil, jwt.ErrSignatureInvalid
+	return zero, global.ErrInternalError
+
 }
 
 func (u *Jwt) GenerateTokenByTempAuthData(ctx context.Context, authKey string) (app_jwt.TokenWithUserData, error) {

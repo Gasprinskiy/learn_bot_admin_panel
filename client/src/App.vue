@@ -5,6 +5,7 @@ import {
   NScrollbar,
   NMessageProvider,
   NLoadingBarProvider,
+  NNotificationProvider,
   NDivider,
 } from 'naive-ui';
 
@@ -19,19 +20,24 @@ const { currentTheme } = useAppTheme();
 <template>
   <NConfigProvider :theme="currentTheme">
     <NLoadingBarProvider>
-      <NMessageProvider>
-        <NGlobalStyle />
+      <NMessageProvider
+        placement="bottom"
+        :duration="3000"
+      >
+        <NNotificationProvider>
+          <NGlobalStyle />
 
-        <!-- <ModalProvider /> -->
-        <div class="app-wrapper">
-          <AppHeader />
-          <NDivider class="app-wrapper__divider" />
-          <div class="app-wrapper__scrollbar-container">
-            <NScrollbar class="app-wrapper__scrollbar">
-              <AppRouterView />
-            </NScrollbar>
+          <!-- <ModalProvider /> -->
+          <div class="app-wrapper">
+            <AppHeader />
+            <NDivider class="app-wrapper__divider" />
+            <div class="app-wrapper__scrollbar-container">
+              <NScrollbar class="app-wrapper__scrollbar">
+                <AppRouterView />
+              </NScrollbar>
+            </div>
           </div>
-        </div>
+        </NNotificationProvider>
       </NMessageProvider>
     </NLoadingBarProvider>
   </NConfigProvider>

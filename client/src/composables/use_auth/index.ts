@@ -1,20 +1,22 @@
 import { computed, reactive, shallowRef, toRefs } from 'vue';
-import type { FetchOptions } from 'ofetch';
-import { useMessage } from 'naive-ui';
+import { useMessage, useNotification } from 'naive-ui';
 import { useRouter } from 'vue-router';
-import type { RouteLocationRaw } from 'vue-router';
+import { useStorage } from '@vueuse/core';
+import type { FetchOptions } from 'ofetch';
+import type { NavigationGuardNext, RouteLocationNormalizedLoadedGeneric } from 'vue-router';
 
 import $api from '@/packages/api/client';
-import type { User, AuthTempData, UserFirstLoginAnswer, UserShortInfo } from '@/shared/types/profile';
 import { useConfig } from '@/composables/use_config';
 import { useRedirectWindow } from '@/composables/use_redirect_window';
 import { useProtectedRoutes } from '@/composables/use_protected_routes';
+import type { User, AuthTempData, UserFirstLoginAnswer, UserShortInfo, AccessRight } from '@/shared/types/profile';
 
 import type { ListenTgAuthSourceParams, LoginCommonParams, TgAuthParams, UseAuthState } from './types';
 import { ErrorMessagesByCode } from './constants';
 
+const hasToken = useStorage('has_token', false);
+
 const state = reactive<UseAuthState>({
-  user: null,
   redirectWindow: null,
   eventSource: null,
   tempData: null,
@@ -22,6 +24,7 @@ const state = reactive<UseAuthState>({
 
 export function useAuth() {
   const message = useMessage();
+  const notification = useNotification();
   const router = useRouter();
 
   const { ApiURL } = useConfig();
@@ -29,28 +32,13 @@ export function useAuth() {
 
   const tempDataLoading = shallowRef<boolean>(false);
 
-  const isAuthorized = computed<boolean>(() => state.user !== null);
+  const isAuthorized = computed<boolean>(() => hasToken.value);
 
-  async function tgAuth(params: TgAuthParams) {
-    tempDataLoading.value = true;
-
-    const { onTempDataCreate } = params;
-
-    try {
-      const response = await $api<AuthTempData>('/auth/temp_data');
-      state.tempData = response;
-
-      onTempDataCreate();
-      listenTgAuthSource({
-        authId: response.uu_id,
-        ...params,
-      });
-    } finally {
-      tempDataLoading.value = false;
-    }
+  function _authCheck(): Promise<UserShortInfo> {
+    return $api<UserShortInfo>('/auth/check');
   }
 
-  function listenTgAuthSource(params: ListenTgAuthSourceParams) {
+  function _listenTgAuthSource(params: ListenTgAuthSourceParams) {
     state.redirectWindow = useRedirectWindow({
       name: 'Авторизация через телеграм',
     });
@@ -71,35 +59,90 @@ export function useAuth() {
         isPassowrdSet: data.is_password_set,
         loginParams: null,
       });
+
+      clearTempData();
     });
 
     state.eventSource?.addEventListener('error', (event: MessageEvent<string>) => {
-      message.error(ErrorMessagesByCode[+event.data], {
-        duration: 3000,
-      });
+      message.error(ErrorMessagesByCode[+event.data]);
 
       onRequestError();
       closeEventSource();
       closeRedirectWindow();
+      clearTempData();
     });
   }
 
-  async function checkAuth() {
-    try {
-      const response = await $api<UserShortInfo>('/auth/check');
-      await buildRoutesByAccessRight(response.access_right);
+  async function tgAuth(params: TgAuthParams) {
+    tempDataLoading.value = true;
 
-      state.user = response;
-      await router.replace({
-        name: 'home',
+    const { onTempDataCreate } = params;
+
+    try {
+      const response = await $api<AuthTempData>('/auth/temp_data');
+      state.tempData = response;
+
+      onTempDataCreate();
+      _listenTgAuthSource({
+        authId: response.uu_id,
+        ...params,
       });
+    } finally {
+      tempDataLoading.value = false;
+    }
+  }
+
+  async function checkAuthOnFirstRun() {
+    try {
+      const response = await _authCheck();
+      await buildRoutesByAccessRight(response.access_right);
     } catch (e) {
-      console.error(e);
+      if (hasToken.value) {
+        const stauts = +(e as any).status || 500;
+        message.error(ErrorMessagesByCode[stauts]);
+        hasToken.value = false;
+      }
+
       await router.replace({
         name: 'auth',
       });
     }
   };
+
+  async function checkAuthOnRouteChange(to: RouteLocationNormalizedLoadedGeneric, from: RouteLocationNormalizedLoadedGeneric, next: NavigationGuardNext) {
+    if (to.fullPath.includes('auth')) {
+      next();
+      return;
+    }
+    const arMap = to.meta.accessRights ? (to.meta.accessRights as Record<AccessRight, boolean>) : null;
+
+    if (!hasToken.value) {
+      next('/auth');
+      message.error('Требуется авторизация');
+      return;
+    }
+
+    try {
+      const user = await _authCheck();
+
+      if (arMap) {
+        const exists = arMap[user.access_right];
+        if (!exists) {
+          next(from.fullPath);
+          message.warning('Отказано в доступе');
+          return;
+        }
+      }
+
+      hasToken.value = true;
+      next();
+    } catch (e) {
+      const stauts = +(e as any).status || 500;
+      message.error(ErrorMessagesByCode[stauts]);
+      hasToken.value = false;
+      next('/auth');
+    }
+  }
 
   async function login(params: LoginCommonParams) {
     const { tempID, loginParams, isPassowrdSet } = params;
@@ -123,42 +166,37 @@ export function useAuth() {
     }
 
     try {
-      const routeRaplaceParams: RouteLocationRaw = {
-        name: 'home',
-      };
-
       const response = await $api<User>('/auth/login', {
         method: 'POST',
         ...options,
       });
       await buildRoutesByAccessRight(response.access_right);
 
-      state.user = response;
-      message.success('Авторизация прошла успешно', {
-        duration: 3000,
-      });
+      message.success('Авторизация прошла успешно');
 
       if (!isPassowrdSet) {
-        message.success('Вам необходимо создать пароль для учетной записи', {
-          duration: 3000,
+        notification.info({
+          title: 'Необходимо создать пароль для учетной записи',
+          description: 'Необходимо создать пароль для учетной записи, для последующего входа с использованием пароля',
+          duration: 5000,
         });
-
-        routeRaplaceParams.name = 'set-pass';
       }
 
-      await router.replace(routeRaplaceParams);
-    } catch (e) {
-      console.error('login error: ', e);
-      message.error(ErrorMessagesByCode[500], {
-        duration: 3000,
+      hasToken.value = true;
+      await router.replace({
+        name: 'home',
       });
+    } catch (e) {
+      const stauts = +(e as any).status || 500;
+      message.error(ErrorMessagesByCode[stauts]);
+
+      hasToken.value = false;
     }
   };
 
   function closeEventSource() {
     state.eventSource?.close();
     state.eventSource = null;
-    state.tempData = null;
   }
 
   function closeRedirectWindow() {
@@ -166,13 +204,19 @@ export function useAuth() {
     state.redirectWindow = null;
   }
 
+  function clearTempData() {
+    state.tempData = null;
+  }
+
   return {
     ...toRefs(state),
     isAuthorized,
     tempDataLoading,
     tgAuth,
-    checkAuth,
+    checkAuthOnFirstRun,
     closeEventSource,
     closeRedirectWindow,
+    clearTempData,
+    checkAuthOnRouteChange,
   };
 }

@@ -27,9 +27,10 @@ const profileRoute: ReadonlyRecordRaw = {
 
 const createProfileRoute: ReadonlyRecordRaw = {
   name: 'create_profile',
-  path: '/create_profle',
+  path: '/create_profile',
   meta: {
     relatedToAccessRights: true,
+    accessRights: { [AccessRight.AccessRightFull]: true },
   },
   component: () => {
     return import('@/views/create_profile/CreateProfileView.vue');
@@ -41,6 +42,11 @@ const teacherTasksRoute: ReadonlyRecordRaw = {
   path: '/teacher_tasks',
   meta: {
     relatedToAccessRights: true,
+    accessRights: {
+      [AccessRight.AccessRightFull]: true,
+      [AccessRight.AccessRightManager]: true,
+      [AccessRight.AccessRightTeacher]: true
+    },
   },
   component: () => {
     return import('@/views/create_profile/CreateProfileView.vue');
@@ -52,6 +58,10 @@ const usersListRoute: ReadonlyRecordRaw = {
   path: '/users_list',
   meta: {
     relatedToAccessRights: true,
+    accessRights: {
+      [AccessRight.AccessRightFull]: true,
+      [AccessRight.AccessRightManager]: true,
+    },
   },
   component: () => {
     return import('@/views/users_list/UsersListView.vue');

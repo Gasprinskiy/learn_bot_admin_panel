@@ -1,11 +1,11 @@
 import { createRouter, createWebHistory } from 'vue-router';
 
 import AuthView from '@/views/auth/AuthView.vue';
-import NotFoundView from '@/views/not_found/NotFoundView.vue';
 
 import TgAuthView from '@/views/auth/children/telegram/TgAuthView.vue';
 import StandartAuthView from '@/views/auth/children/standart_auth/StandartAuthView.vue';
 import SetPassView from '@/views/auth/children/set_pass/SetPassView.vue';
+import { DefaultRoutes, RoutesByAccessRightList } from './protected_routes';
 
 const router = createRouter({
   history: createWebHistory(),
@@ -41,8 +41,12 @@ const router = createRouter({
     {
       path: '/:pathMatch(.*)*',
       name: 'NotFound',
-      component: NotFoundView,
+      component: () => import('@/views/not_found/NotFoundView.vue'),
     },
+    ...DefaultRoutes,
+    ...RoutesByAccessRightList.full_access,
+    ...RoutesByAccessRightList.manager_access,
+    ...RoutesByAccessRightList.teacher_access
   ],
 });
 

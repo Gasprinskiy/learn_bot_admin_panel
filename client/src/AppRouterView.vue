@@ -2,15 +2,18 @@
 import { useLoadingBar, useMessage } from 'naive-ui';
 import { useApiRequestEventBus } from '@/composables/use_api_requests_event_bus';
 import { onMounted, onBeforeMount } from 'vue';
-import { useAuth } from './composables/use_auth';
 
+import { useAuth } from './composables/use_auth';
+import { useRouter } from 'vue-router';
+
+const router = useRouter()
 const loadingBar = useLoadingBar();
 const apiEventBus = useApiRequestEventBus();
 const message = useMessage();
-const { checkAuth } = useAuth();
+const { checkAuthOnFirstRun, checkAuthOnRouteChange } = useAuth();
 
 onBeforeMount(() => {
-  checkAuth();
+  // checkAuthOnFirstRun();
 });
 
 onMounted(() => {
@@ -23,6 +26,8 @@ onMounted(() => {
     }
   });
 });
+
+router.beforeEach(checkAuthOnRouteChange)
 </script>
 
 <template>

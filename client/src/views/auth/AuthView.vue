@@ -109,7 +109,13 @@ async function onChoseTgAsAuthMethod() {
           <NDivider class="auth-view__divider" />
 
           <NAlert type="info">
-            Если ваш аккаунт не активирован вам нужно пройти авторизацию через Telegram
+            <template #header>
+              Важно!
+            </template>
+
+            <template #default>
+              В случае если вы не выставили пароль для аккаунта или это ваш первый вход вам нужно пройти авторизацию через Telegram
+            </template>
           </NAlert>
         </div>
       </template>

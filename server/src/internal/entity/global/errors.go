@@ -7,15 +7,15 @@ import (
 
 var (
 	// ErrNoData данные не найдены"
-	ErrNoData = errors.New("данные не найдены")
+	ErrNoData = errors.New("NoData")
 	// ErrInternalError внутряя ошибка
-	ErrInternalError = errors.New("произошла внутреняя ошибка")
+	ErrInternalError = errors.New("InternalError")
 	// ErrPermissionDenied отказано в доступе
-	ErrPermissionDenied = errors.New("отказано в доступе")
+	ErrPermissionDenied = errors.New("PermissionDenied")
 	// ErrInvalidParam не верные параметры
-	ErrInvalidParam = errors.New("не верные параметры")
+	ErrInvalidParam = errors.New("InvalidParam")
 	// ErrExpired время вышло
-	ErrExpired = errors.New("время вышло")
+	ErrExpired = errors.New("Expired")
 )
 
 var ErrStatusCodes = map[error]int{

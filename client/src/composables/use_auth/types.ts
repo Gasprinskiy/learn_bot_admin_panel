@@ -1,8 +1,7 @@
-import type { AuthTempData, LoginParams, UserShortInfo } from '@/shared/types/profile';
+import type { AuthTempData, LoginParams } from '@/shared/types/profile';
 import type { UseRedirectWindowReturnType } from '@/composables/use_redirect_window/types';
 
 export interface UseAuthState {
-  user: UserShortInfo | null;
   redirectWindow: UseRedirectWindowReturnType | null;
   eventSource: EventSource | null;
   tempData: AuthTempData | null;

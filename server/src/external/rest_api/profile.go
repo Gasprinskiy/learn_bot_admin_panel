@@ -116,15 +116,17 @@ func (h *ProfileHandler) HandleLogin(gctx *gin.Context) {
 func (h *ProfileHandler) HandleCheck(gctx *gin.Context) {
 	token, err := gctx.Cookie("access_token")
 	if err != nil {
-		fmt.Println("err: ", err)
-		gctx.JSON(http.StatusInternalServerError, gin.H{"message": global.ErrInternalError})
+		gctx.JSON(http.StatusUnauthorized, gin.H{"message": global.ErrPermissionDenied.Error()})
 		return
 	}
 
 	userData, err := h.ui.Usecase.Jwt.ParseToken(token)
 	if err != nil {
-		fmt.Println("err: ", err)
-		gctx.JSON(http.StatusInternalServerError, gin.H{"message": global.ErrInternalError})
+		if err == global.ErrExpired {
+			h.removeAccessToken(gctx, token)
+		}
+
+		gctx.JSON(global.ErrStatusCodes[err], gin.H{"message": err.Error()})
 		return
 	}
 
@@ -134,6 +136,10 @@ func (h *ProfileHandler) HandleCheck(gctx *gin.Context) {
 func (h *ProfileHandler) setAccessToken(gctx *gin.Context, token string) {
 	lifeTime := int(h.config.JwtSecretTTL.Milliseconds())
 	gctx.SetCookie("access_token", token, lifeTime, "/", "admin-panel.local", false, true)
+}
+
+func (h *ProfileHandler) removeAccessToken(gctx *gin.Context, token string) {
+	gctx.SetCookie("access_token", token, -1, "/", "admin-panel.local", false, true)
 }
 
 // authSession, exists := h.authChan.Read(authID)

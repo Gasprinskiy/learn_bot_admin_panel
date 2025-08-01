@@ -1,13 +1,13 @@
 <script lang="ts" setup>
-import { computed, onBeforeUnmount, onMounted, shallowRef } from 'vue';
-import { NButton, NDivider, NQrCode, NSpace, useMessage } from 'naive-ui';
+import { computed, onBeforeUnmount, onBeforeMount, onMounted, shallowRef } from 'vue';
+import { NButton, NDivider, NQrCode, NSpace } from 'naive-ui';
+import { useRouter } from 'vue-router';
 
 import { useAuth } from '@/composables/use_auth';
 import { useConfig } from '@/composables/use_config';
 
-const message = useMessage();
+const router = useRouter();
 const { redirectWindow, tempData, closeRedirectWindow, closeEventSource } = useAuth();
-
 const { SSETTL } = useConfig();
 
 const countDownLeftMinutes = shallowRef<number>(SSETTL);
@@ -34,14 +34,18 @@ function startCountDown() {
   }, 1000);
 }
 
-onMounted(() => {
+onBeforeMount(async () => {
   if (!tempData.value) {
-    message.error('Ошибка при генерации ссылки', {
-      duration: 3000,
+    await router.replace({
+      name: 'auth',
     });
   }
+});
+
+onMounted(() => {
   startCountDown();
 });
+
 onBeforeUnmount(() => {
   closeRedirectWindow();
   closeEventSource();
@@ -50,10 +54,13 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="tg_auth">
+  <div
+    v-if="tempData"
+    class="tg_auth"
+  >
     <NButton
       type="primary"
-      @click="redirectWindow!.open(tempData!.auth_url)"
+      @click="redirectWindow!.open(tempData.auth_url)"
     >
       Перейдите по ссылке
     </NButton>
@@ -68,7 +75,7 @@ onBeforeUnmount(() => {
         <NQrCode
           style="padding: 0;"
           :size="200"
-          :value="tempData!.auth_url"
+          :value="tempData.auth_url"
           error-correction-level="H"
         />
       </div>
