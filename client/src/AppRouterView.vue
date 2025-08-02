@@ -1,25 +1,34 @@
 <script setup lang="ts">
-import { useLoadingBar, useMessage } from 'naive-ui';
+import { NDivider, NScrollbar, NSkeleton, useLoadingBar, useMessage } from 'naive-ui';
 import { useApiRequestEventBus } from '@/composables/use_api_requests_event_bus';
-import { onMounted, onBeforeMount } from 'vue';
-
-import { useAuth } from './composables/use_auth';
+import { onMounted, shallowRef } from 'vue';
 import { useRouter } from 'vue-router';
 
-const router = useRouter()
+import { useAuth } from './composables/use_auth';
+import AppHeader from './components/header/AppHeader.vue';
+import type { UseApiRequestEventBusEvents } from './composables/use_api_requests_event_bus/types';
+
+const router = useRouter();
 const loadingBar = useLoadingBar();
 const apiEventBus = useApiRequestEventBus();
 const message = useMessage();
-const { checkAuthOnFirstRun, checkAuthOnRouteChange } = useAuth();
+const { checkAuthOnRouteChange } = useAuth();
 
-onBeforeMount(() => {
-  // checkAuthOnFirstRun();
-});
+const isBlocked = shallowRef<boolean>(false);
 
 onMounted(() => {
-  apiEventBus.subscribe('on_request', () => loadingBar.start());
-  apiEventBus.subscribe('on_response', () => loadingBar.finish());
-  apiEventBus.subscribe('on_error', (arg: { message: string | undefined } | null) => {
+  apiEventBus.subscribe('on_request', (arg: UseApiRequestEventBusEvents['on_request']) => {
+    isBlocked.value = arg.is_blocking || false;
+    loadingBar.start();
+  });
+
+  apiEventBus.subscribe('on_response', () => {
+    isBlocked.value = false;
+    loadingBar.finish();
+  });
+
+  apiEventBus.subscribe('on_error', (arg: UseApiRequestEventBusEvents['on_error']) => {
+    isBlocked.value = false;
     loadingBar.error();
     if (arg && arg.message) {
       message.error(arg.message, { duration: 3000 });
@@ -27,9 +36,48 @@ onMounted(() => {
   });
 });
 
-router.beforeEach(checkAuthOnRouteChange)
+router.beforeEach(checkAuthOnRouteChange);
 </script>
 
 <template>
-  <RouterView />
+  <div
+    class="app-wrapper"
+    :class="{ blocked: isBlocked }"
+  >
+    <AppHeader />
+    <NDivider class="app-wrapper__divider" />
+    <div class="app-wrapper__scrollbar-container">
+      <NScrollbar class="app-wrapper__scrollbar">
+        <RouterView />
+      </NScrollbar>
+    </div>
+  </div>
 </template>
+
+<style lang="scss">
+.app-wrapper {
+  position: relative;
+
+  &.blocked {
+    pointer-events: none;
+  }
+
+  &__scrollbar-container {
+    width: 100%;
+    margin: auto;
+  }
+
+  &__divider {
+    margin: 0 !important;
+  }
+
+  &__scrollbar {
+    height: calc(100vh - 57px);
+    padding: 16px;
+
+    .n-scrollbar-content {
+      height: 100%;
+    }
+  }
+}
+</style>

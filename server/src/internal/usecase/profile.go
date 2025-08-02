@@ -10,10 +10,12 @@ import (
 	"learn_bot_admin_panel/internal/transaction"
 	"learn_bot_admin_panel/rimport"
 	"learn_bot_admin_panel/tools/logger"
+	"learn_bot_admin_panel/tools/passencoder"
 	"learn_bot_admin_panel/tools/str"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 )
 
 type Profile struct {
@@ -137,4 +139,137 @@ func (u *Profile) WaitTgAuthVerify(ctx context.Context, authKey string) ([]byte,
 	case <-time.After(u.config.SSETTL):
 		return data, global.ErrExpired
 	}
+}
+
+func (u *Profile) CreateUserDeviceIDIfNotExists(ctx context.Context, userID int, deviceID string) error {
+	lf := logrus.Fields{
+		"u_id": userID,
+	}
+
+	ts := transaction.MustGetSession(ctx)
+
+	deviceIDList, err := u.ri.Repository.Profile.FindUserDeviceIDList(ts, userID)
+	if err != nil && err != global.ErrNoData {
+		u.log.Db.WithFields(lf).Errorln(u.logPrefix(), "не удалось найти id устройств пользователя:", err)
+		return global.ErrInternalError
+	}
+
+	idMap := make(map[string]struct{}, len(deviceIDList))
+
+	for _, id := range deviceIDList {
+		idMap[id] = struct{}{}
+	}
+
+	_, exists := idMap[deviceID]
+	if !exists {
+		return nil
+	}
+
+	if err = u.ri.Repository.Profile.CreateUserDeviceID(ts, userID, deviceID); err != nil {
+		u.log.Db.WithFields(lf).Errorln(u.logPrefix(), "не удалось создать id нового устройства пользователя:", err)
+		return global.ErrInternalError
+	}
+
+	return nil
+}
+
+func (u *Profile) OnPasswordLogin(ctx context.Context, param profile.PasswordLoginParam, deviceID string) (profile.PasswordLoginResponse, error) {
+	lf := logrus.Fields{
+		"tg_user_name": param.UserName,
+	}
+
+	var zero profile.PasswordLoginResponse
+
+	ts := transaction.MustGetSession(ctx)
+
+	userInfo, err := u.ri.Repository.Profile.FindProfileByTGUserName(ts, param.UserName)
+	switch err {
+	case nil:
+	case global.ErrNoData:
+		return zero, err
+
+	default:
+		u.log.Db.WithFields(lf).Errorln(u.logPrefix(), "не удалось найти пользователя по телеграм юзернейму:", err)
+		return zero, global.ErrInternalError
+	}
+
+	if !userInfo.IsPasswordSet() {
+		return zero, global.ErrNoData
+	}
+
+	valid := passencoder.CheckHashPassword(userInfo.Password.String, param.Password)
+	if !valid {
+		return zero, global.ErrNoData
+	}
+
+	lf["u_id"] = userInfo.ID
+
+	deviceIDList, err := u.ri.Repository.Profile.FindUserDeviceIDList(ts, userInfo.ID)
+	if err != nil && err != global.ErrNoData {
+		u.log.Db.WithFields(lf).Errorln(u.logPrefix(), "не удалось найти id устройств пользователя:", err)
+		return zero, global.ErrInternalError
+	}
+
+	var needTwoStepAuth bool
+
+	if len(deviceIDList) > 0 {
+		needTwoStepAuth = true
+
+		idMap := make(map[string]struct{}, len(deviceIDList))
+
+		for _, id := range deviceIDList {
+			idMap[id] = struct{}{}
+		}
+
+		_, exists := idMap[deviceID]
+
+		needTwoStepAuth = !exists
+	}
+
+	return profile.NewPasswordLoginResponse(needTwoStepAuth, userInfo.ID, userInfo.Access), nil
+}
+
+func (u *Profile) SetProfilePassword(ctx context.Context, password string, userID int) error {
+	lf := logrus.Fields{
+		"u_id": userID,
+	}
+
+	hashPassword, err := passencoder.CreateHashPassword(password)
+	if err != nil {
+		u.log.Db.WithFields(lf).Errorln(u.logPrefix(), "не удалось захешировать пароль:", err)
+		return global.ErrInternalError
+	}
+
+	ts := transaction.MustGetSession(ctx)
+
+	err = u.ri.Repository.Profile.SetProfilePassword(ts, userID, hashPassword)
+	if err != nil {
+		u.log.Db.WithFields(lf).Errorln(u.logPrefix(), "не удалось записать пароль:", err)
+		return global.ErrInternalError
+	}
+
+	return nil
+}
+
+func (u *Profile) GetUserCommonInfo(ctx context.Context, userID int) (profile.UserCommonInfo, error) {
+	var zero profile.UserCommonInfo
+
+	lf := logrus.Fields{
+		"u_id": userID,
+	}
+
+	ts := transaction.MustGetSession(ctx)
+
+	user, err := u.ri.Repository.Profile.FindProfileByID(ts, userID)
+	switch err {
+	case nil:
+	case global.ErrNoData:
+		return zero, err
+
+	default:
+		u.log.Db.WithFields(lf).Errorln(u.logPrefix(), "не удалось найти пользователя по id:", err)
+		return zero, global.ErrInternalError
+	}
+
+	return user.NewUserCommonInfo(), nil
 }

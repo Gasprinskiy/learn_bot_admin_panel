@@ -3,8 +3,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 import AuthView from '@/views/auth/AuthView.vue';
 
 import TgAuthView from '@/views/auth/children/telegram/TgAuthView.vue';
-import StandartAuthView from '@/views/auth/children/standart_auth/StandartAuthView.vue';
-import SetPassView from '@/views/auth/children/set_pass/SetPassView.vue';
+import PasswordAuthView from '@/views/auth/children/password_auth/PasswordAuthView.vue';
 import { DefaultRoutes, RoutesByAccessRightList } from './protected_routes';
 
 const router = createRouter({
@@ -24,17 +23,12 @@ const router = createRouter({
           },
         },
         {
-          name: 'standart-auth',
-          path: 'standart',
-          component: StandartAuthView,
+          name: 'password-auth',
+          path: 'password',
+          component: PasswordAuthView,
           meta: {
             hasBackAction: true,
           },
-        },
-        {
-          path: 'set_pass',
-          component: SetPassView,
-          name: 'set-pass',
         },
       ],
     },
@@ -46,7 +40,7 @@ const router = createRouter({
     ...DefaultRoutes,
     ...RoutesByAccessRightList.full_access,
     ...RoutesByAccessRightList.manager_access,
-    ...RoutesByAccessRightList.teacher_access
+    ...RoutesByAccessRightList.teacher_access,
   ],
 });
 

@@ -2,17 +2,16 @@ import { computed, reactive, shallowRef, toRefs } from 'vue';
 import { useMessage, useNotification } from 'naive-ui';
 import { useRouter } from 'vue-router';
 import { useStorage } from '@vueuse/core';
-import type { FetchOptions } from 'ofetch';
 import type { NavigationGuardNext, RouteLocationNormalizedLoadedGeneric } from 'vue-router';
 
 import $api from '@/packages/api/client';
 import { useConfig } from '@/composables/use_config';
 import { useRedirectWindow } from '@/composables/use_redirect_window';
 import { useProtectedRoutes } from '@/composables/use_protected_routes';
-import type { User, AuthTempData, UserFirstLoginAnswer, UserShortInfo, AccessRight } from '@/shared/types/profile';
+import type { AuthTempData, UserFirstLoginAnswer, UserShortInfo, AccessRight, User, PasswordLoginParams, PasswordLoginResponse } from '@/shared/types/profile';
 
-import type { ListenTgAuthSourceParams, LoginCommonParams, TgAuthParams, UseAuthState } from './types';
-import { ErrorMessagesByCode } from './constants';
+import type { ListenTgAuthSourceParams, TgAuthParams, UseAuthState } from './types';
+import { ErrorMessagesByCode, PasswordLoginErrorMessagesByCode } from './constants';
 
 const hasToken = useStorage('has_token', false);
 
@@ -54,11 +53,7 @@ export function useAuth() {
       closeEventSource();
       closeRedirectWindow();
 
-      await login({
-        tempID: authId,
-        isPassowrdSet: data.is_password_set,
-        loginParams: null,
-      });
+      await tgLogin(authId, data.is_password_set);
 
       clearTempData();
     });
@@ -73,7 +68,7 @@ export function useAuth() {
     });
   }
 
-  async function tgAuth(params: TgAuthParams) {
+  async function getTgAuthDataAndListen(params: TgAuthParams) {
     tempDataLoading.value = true;
 
     const { onTempDataCreate } = params;
@@ -144,32 +139,10 @@ export function useAuth() {
     }
   }
 
-  async function login(params: LoginCommonParams) {
-    const { tempID, loginParams, isPassowrdSet } = params;
-    if (!tempID && !loginParams) {
-      return;
-    }
-
-    const options: FetchOptions<'json', any> = {};
-
-    if (tempID !== null) {
-      options.params = {
-        temp_id: tempID,
-      };
-    }
-
-    if (loginParams !== null) {
-      options.body = {
-        username: loginParams.username,
-        password: loginParams.password,
-      };
-    }
-
+  async function tgLogin(tempID: string, isPassowrdSet: boolean) {
     try {
-      const response = await $api<User>('/auth/login', {
-        method: 'POST',
-        ...options,
-      });
+      const response = await $api<UserShortInfo>(`/auth/tg_login/${tempID}`);
+
       await buildRoutesByAccessRight(response.access_right);
 
       message.success('Авторизация прошла успешно');
@@ -194,6 +167,47 @@ export function useAuth() {
     }
   };
 
+  async function passwordLogin(params: PasswordLoginParams) {
+    try {
+      const response = await $api<PasswordLoginResponse>(`/auth/password_login`, {
+        method: 'POST',
+        body: {
+          ...params,
+          _is_blocking: true,
+        },
+      });
+
+      if (response.need_two_step_auth) {
+        message.info('Требуется подтверждение');
+        return;
+      }
+
+      await buildRoutesByAccessRight(response.access_right);
+
+      message.success('Авторизация прошла успешно');
+
+      hasToken.value = true;
+      await router.replace({
+        name: 'home',
+      });
+    } catch (e) {
+      const stauts = +(e as any).status || 500;
+      message.error(PasswordLoginErrorMessagesByCode[stauts]);
+
+      hasToken.value = false;
+    }
+  };
+
+  async function getUserInfo(): Promise<User | null> {
+    try {
+      return $api<User>('/auth/profile');
+    } catch (e) {
+      const stauts = +(e as any).status || 500;
+      message.error(ErrorMessagesByCode[stauts]);
+      return null;
+    }
+  }
+
   function closeEventSource() {
     state.eventSource?.close();
     state.eventSource = null;
@@ -212,7 +226,10 @@ export function useAuth() {
     ...toRefs(state),
     isAuthorized,
     tempDataLoading,
-    tgAuth,
+    tgLogin,
+    passwordLogin,
+    getTgAuthDataAndListen,
+    getUserInfo,
     checkAuthOnFirstRun,
     closeEventSource,
     closeRedirectWindow,

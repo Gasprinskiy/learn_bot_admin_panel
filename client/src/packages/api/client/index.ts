@@ -1,5 +1,6 @@
 import { useApiRequestEventBus } from '@/composables/use_api_requests_event_bus';
 import { useConfig } from '@/composables/use_config';
+import { generateDeviceID } from '@/packages/device_info';
 import { ofetch } from 'ofetch';
 
 const apiRequestEventBus = useApiRequestEventBus();
@@ -10,9 +11,13 @@ const $api = ofetch.create({
   credentials: 'include',
   cache: 'no-store',
   headers: {
-    Accept: 'application/json',
+    'Accept': 'application/json',
+    'Device-ID': generateDeviceID(),
   },
-  onRequest: () => apiRequestEventBus.dispatch('on_request', null),
+  onRequest: (request) => {
+    const { options } = request;
+    apiRequestEventBus.dispatch('on_request', { is_blocking: (options.body as any)?._is_blocking });
+  },
   onResponse: () => apiRequestEventBus.dispatch('on_response', null),
   onRequestError: () => apiRequestEventBus.dispatch('on_error', null),
   onResponseError: (response) => {

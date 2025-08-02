@@ -10,7 +10,10 @@ import (
 type Profile interface {
 	CreateProfile(ts transaction.Session, param profile.CreateProfileParam) (int, error)
 	FindProfileByTGUserName(ts transaction.Session, userName string) (profile.User, error)
-	// SetProfilePassword(ts transaction.Session, ID int, password string) error
+	FindProfileByID(ts transaction.Session, userID int) (profile.User, error)
+	FindUserDeviceIDList(ts transaction.Session, userID int) ([]string, error)
+	CreateUserDeviceID(ts transaction.Session, userID int, deviceID string) error
+	SetProfilePassword(ts transaction.Session, userID int, password string) error
 }
 
 type TgBot interface {

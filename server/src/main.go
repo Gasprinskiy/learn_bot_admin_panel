@@ -6,6 +6,7 @@ import (
 	"learn_bot_admin_panel/config"
 	"learn_bot_admin_panel/external/bot_api"
 	"learn_bot_admin_panel/external/rest_api"
+	"learn_bot_admin_panel/external/rest_api/middleware"
 	"learn_bot_admin_panel/internal/chanel_bus"
 	"learn_bot_admin_panel/internal/transaction"
 	"learn_bot_admin_panel/rimport"
@@ -103,8 +104,11 @@ func main() {
 	// инициализация usecase
 	ui := uimport.NewUsecaseImport(ri, logger, authChan, config)
 
+	//
+	middleware := middleware.NewAuthMiddleware(ui.Jwt)
+
 	// инициализация rest handler
-	rest_api.NewProfileHandler(ui, v1Router, config)
+	rest_api.NewProfileHandler(ui, v1Router, config, logger, middleware, sessionManager)
 
 	// инициализация tg bot handler
 	bot_api.NewBotProfileHandler(ui, b, config, logger, sessionManager)

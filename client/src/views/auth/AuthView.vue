@@ -11,7 +11,7 @@ import { AuthMethodPathMap, ChildRouteNameMap } from './constants';
 
 const route = useRoute();
 const router = useRouter();
-const { tempDataLoading, tgAuth } = useAuth();
+const { tempDataLoading, getTgAuthDataAndListen } = useAuth();
 
 const childRouteActive = computed<boolean>(() => route.name ? (ChildRouteNameMap[route.name.toString()] || false) : false);
 const hasBackAction = computed<boolean>(() => Boolean(route.meta?.hasBackAction));
@@ -27,7 +27,7 @@ async function resetAuthMethod() {
 }
 
 async function onChoseTgAsAuthMethod() {
-  await tgAuth({
+  await getTgAuthDataAndListen({
     onTempDataCreate: () => onAuthMehtodChose(AuthMethod.TELEGRAM),
     onRequestError: resetAuthMethod,
   });

@@ -9,7 +9,7 @@ export interface User {
   first_name: string;
   last_name: string;
   tg_user_name: string;
-  tg_id: number | null;
+  is_password_set: boolean;
   access_right: AccessRight;
 }
 
@@ -27,7 +27,13 @@ export interface UserFirstLoginAnswer {
   is_password_set: boolean;
 }
 
-export interface LoginParams {
-  username: string;
+export interface PasswordLoginParams {
+  user_name: string;
   password: string;
+}
+
+export interface PasswordLoginResponse {
+  need_two_step_auth: boolean;
+  u_id: number;
+  access_right: AccessRight;
 }
