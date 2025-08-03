@@ -75,8 +75,20 @@ func (r *profileRepo) SetProfilePassword(ts transaction.Session, userID int, pas
 	sqlQuery := `
 		UPDATE admin_panel_users
 			SET password = $1
-		WHERE u_id = $2`
+		WHERE u_id = $2
+	`
 
 	_, err := SqlxTx(ts).Exec(sqlQuery, password, userID)
+	return err
+}
+
+func (r *profileRepo) SetProfileTGID(ts transaction.Session, userID int, TGID int64) error {
+	sqlQuery := `
+		UPDATE admin_panel_users
+			SET tg_id = $1
+		WHERE u_id = $2
+	`
+
+	_, err := SqlxTx(ts).Exec(sqlQuery, TGID, userID)
 	return err
 }

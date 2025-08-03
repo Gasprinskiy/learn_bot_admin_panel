@@ -45,12 +45,12 @@ func NewBotProfileHandler(
 }
 
 func (h *BotProfileHandler) TgAuthHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
-	message, err := transaction.RunInTx(
+	message, err := transaction.RunInTxCommit(
 		ctx,
 		h.log,
 		h.sm,
 		func(ctx context.Context) (string, error) {
-			return h.ui.Usecase.Profile.TgAuthVerify(ctx, update.Message.From.Username, update.Message.Text)
+			return h.ui.Usecase.Profile.TgAuthVerify(ctx, update.Message.From.Username, update.Message.Text, update.Message.From.ID)
 		},
 	)
 

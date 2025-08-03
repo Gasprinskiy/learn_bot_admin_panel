@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"learn_bot_admin_panel/config"
 	"learn_bot_admin_panel/internal/chanel_bus"
 	"learn_bot_admin_panel/internal/entity/global"
@@ -14,24 +15,30 @@ import (
 	"learn_bot_admin_panel/tools/str"
 	"time"
 
+	"github.com/go-telegram/bot"
+	"github.com/go-telegram/bot/models"
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 )
 
 type Profile struct {
-	ri       *rimport.RepositoryImports
-	log      *logger.Logger
-	authChan *chanel_bus.AuthChan
-	config   *config.Config
+	ri              *rimport.RepositoryImports
+	log             *logger.Logger
+	authChan        *chanel_bus.BusChanel[profile.User]
+	twoStepAuthChan *chanel_bus.BusChanel[bool]
+	config          *config.Config
+	b               *bot.Bot
 }
 
 func NewProfile(
 	ri *rimport.RepositoryImports,
 	log *logger.Logger,
-	authChan *chanel_bus.AuthChan,
+	authChan *chanel_bus.BusChanel[profile.User],
+	twoStepAuthChan *chanel_bus.BusChanel[bool],
 	config *config.Config,
+	b *bot.Bot,
 ) *Profile {
-	return &Profile{ri, log, authChan, config}
+	return &Profile{ri, log, authChan, twoStepAuthChan, config, b}
 }
 
 func (u *Profile) logPrefix() string {
@@ -71,8 +78,8 @@ func (u *Profile) CreateAuthUrlResponse() (profile.AuthUrlResponse, error) {
 	return result, nil
 }
 
-func (u *Profile) TgAuthVerify(ctx context.Context, userName, text string) (message string, err error) {
-	var chanel chanel_bus.SessionChanel
+func (u *Profile) TgAuthVerify(ctx context.Context, userName, text string, TGID int64) (message string, err error) {
+	var chanel chanel_bus.Chanel[profile.User]
 
 	splitted := str.SplitStringByEmptySpace(text)
 	if len(splitted) < 2 {
@@ -94,7 +101,14 @@ func (u *Profile) TgAuthVerify(ctx context.Context, userName, text string) (mess
 		err = global.ErrInternalError
 	}
 
-	chanel.User = user
+	if !user.IsActivated() {
+		if err = u.ri.Repository.Profile.SetProfileTGID(ts, user.ID, TGID); err != nil {
+			u.log.Db.Errorln(u.logPrefix(), "не удалось обновить telegram_id пользователя: ", err)
+			return
+		}
+	}
+
+	chanel.Data = user
 	done := u.authChan.Write(splitted[1], chanel)
 	if !done {
 		return message, global.ErrExpired
@@ -104,7 +118,7 @@ func (u *Profile) TgAuthVerify(ctx context.Context, userName, text string) (mess
 		return message, err
 	}
 
-	return profile.AuthSuccessfulyMessage, nil
+	return fmt.Sprintf(profile.AuthSuccessfulyMessage, user.FirstName), nil
 }
 
 func (u *Profile) WaitTgAuthVerify(ctx context.Context, authKey string) ([]byte, error) {
@@ -122,7 +136,7 @@ func (u *Profile) WaitTgAuthVerify(ctx context.Context, authKey string) ([]byte,
 		return data, global.ErrExpired
 
 	case authChanel := <-authSession.Chan:
-		userData := authChanel.User
+		userData := authChanel.Data
 
 		if authChanel.Error != nil {
 			return data, authChanel.Error
@@ -161,7 +175,7 @@ func (u *Profile) CreateUserDeviceIDIfNotExists(ctx context.Context, userID int,
 	}
 
 	_, exists := idMap[deviceID]
-	if !exists {
+	if exists {
 		return nil
 	}
 
@@ -210,7 +224,10 @@ func (u *Profile) OnPasswordLogin(ctx context.Context, param profile.PasswordLog
 		return zero, global.ErrInternalError
 	}
 
-	var needTwoStepAuth bool
+	var (
+		needTwoStepAuth bool
+		uuID            string
+	)
 
 	if len(deviceIDList) > 0 {
 		needTwoStepAuth = true
@@ -223,10 +240,35 @@ func (u *Profile) OnPasswordLogin(ctx context.Context, param profile.PasswordLog
 
 		_, exists := idMap[deviceID]
 
+		if !exists {
+			uuID = uuid.NewString()
+			u.twoStepAuthChan.Create(uuID, u.config.SSETTL)
+
+			message, err := u.b.SendMessage(ctx, &bot.SendMessageParams{
+				ChatID: userInfo.TgID.Int64,
+				Text:   "Обнаружен вход с нового устройства, это были вы?",
+				ReplyMarkup: &models.InlineKeyboardMarkup{
+					InlineKeyboard: [][]models.InlineKeyboardButton{
+						{
+							{Text: "❌ Нет", CallbackData: "tow_step_auth:no"},
+							{Text: "✅ Да", CallbackData: "tow_step_auth:yes"},
+						},
+					},
+				},
+			})
+
+			if err != nil {
+				u.log.Db.WithFields(lf).Errorln(u.logPrefix(), "не удалось отправить сообщения о подтверждении", err)
+				return zero, global.ErrInternalError
+			}
+
+			fmt.Println("message: ", message)
+		}
+
 		needTwoStepAuth = !exists
 	}
 
-	return profile.NewPasswordLoginResponse(needTwoStepAuth, userInfo.ID, userInfo.Access), nil
+	return profile.NewPasswordLoginResponse(needTwoStepAuth, userInfo.ID, userInfo.Access, uuID), nil
 }
 
 func (u *Profile) SetProfilePassword(ctx context.Context, password string, userID int) error {

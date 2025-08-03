@@ -4,6 +4,8 @@ import AuthView from '@/views/auth/AuthView.vue';
 
 import TgAuthView from '@/views/auth/children/telegram/TgAuthView.vue';
 import PasswordAuthView from '@/views/auth/children/password_auth/PasswordAuthView.vue';
+import TwoStepVerificationView from '@/views/auth/children/two_step_verification/TwoStepVerificationView.vue';
+
 import { DefaultRoutes, RoutesByAccessRightList } from './protected_routes';
 
 const router = createRouter({
@@ -29,6 +31,11 @@ const router = createRouter({
           meta: {
             hasBackAction: true,
           },
+        },
+        {
+          name: 'two-step-verification',
+          path: 'two_step_ver',
+          component: TwoStepVerificationView,
         },
       ],
     },

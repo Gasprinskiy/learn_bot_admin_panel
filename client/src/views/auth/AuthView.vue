@@ -15,6 +15,13 @@ const { tempDataLoading, getTgAuthDataAndListen } = useAuth();
 
 const childRouteActive = computed<boolean>(() => route.name ? (ChildRouteNameMap[route.name.toString()] || false) : false);
 const hasBackAction = computed<boolean>(() => Boolean(route.meta?.hasBackAction));
+const title = computed<string>(() => {
+  if (route.name === 'two-step-verification') {
+    return '2-х этапная верификация';
+  }
+
+  return 'Авторизация';
+});
 
 async function onAuthMehtodChose(method: AuthMethod) {
   await router.push({
@@ -55,7 +62,7 @@ async function onChoseTgAsAuthMethod() {
           </NButton>
 
           <h4 class="auth-view__card_title">
-            Авторизация
+            {{ title }}
           </h4>
         </div>
       </template>

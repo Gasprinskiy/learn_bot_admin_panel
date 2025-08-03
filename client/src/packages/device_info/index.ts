@@ -45,5 +45,8 @@ function simpleHash(str: string): string {
 export function generateDeviceID(): string {
   const info = getDeviceInfo();
   const data = JSON.stringify(info);
-  return simpleHash(data);
+  return simpleHash(`${data}suck`);
+  // simpleHash(data);
 };
+
+// simpleHash(`${data}suck`);

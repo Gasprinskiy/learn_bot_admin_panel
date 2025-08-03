@@ -14,6 +14,7 @@ type Profile interface {
 	FindUserDeviceIDList(ts transaction.Session, userID int) ([]string, error)
 	CreateUserDeviceID(ts transaction.Session, userID int, deviceID string) error
 	SetProfilePassword(ts transaction.Session, userID int, password string) error
+	SetProfileTGID(ts transaction.Session, userID int, TGID int64) error
 }
 
 type TgBot interface {

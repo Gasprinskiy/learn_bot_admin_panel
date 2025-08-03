@@ -9,4 +9,5 @@ export const AuthTempDataInjectKey = 'auth_temp_data' as const;
 export const ChildRouteNameMap: Record<string, boolean> = {
   'telegram-auth': true,
   'password-auth': true,
+  'two-step-verification': true,
 };

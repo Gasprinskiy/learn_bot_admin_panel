@@ -69,6 +69,10 @@ export function useAuth() {
   }
 
   async function getTgAuthDataAndListen(params: TgAuthParams) {
+    if (tempDataLoading.value) {
+      return;
+    }
+
     tempDataLoading.value = true;
 
     const { onTempDataCreate } = params;
@@ -82,6 +86,9 @@ export function useAuth() {
         authId: response.uu_id,
         ...params,
       });
+    } catch (e) {
+      const stauts = +(e as any).status || 500;
+      message.error(ErrorMessagesByCode[stauts]);
     } finally {
       tempDataLoading.value = false;
     }
@@ -106,6 +113,10 @@ export function useAuth() {
 
   async function checkAuthOnRouteChange(to: RouteLocationNormalizedLoadedGeneric, from: RouteLocationNormalizedLoadedGeneric, next: NavigationGuardNext) {
     if (to.fullPath.includes('auth')) {
+      if (hasToken.value) {
+        next(from.fullPath);
+        return;
+      }
       next();
       return;
     }
@@ -179,6 +190,9 @@ export function useAuth() {
 
       if (response.need_two_step_auth) {
         message.info('Требуется подтверждение');
+        await router.replace({
+          name: 'two-step-verification',
+        });
         return;
       }
 

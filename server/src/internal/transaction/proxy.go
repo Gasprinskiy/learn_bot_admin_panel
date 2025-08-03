@@ -2,6 +2,7 @@ package transaction
 
 import (
 	"context"
+	"fmt"
 	"learn_bot_admin_panel/internal/entity/global"
 	"learn_bot_admin_panel/tools/logger"
 )
@@ -42,7 +43,7 @@ func RunInTx[T any](
 
 func RunInTxCommit[T any](
 	ctx context.Context,
-	// log *logrus.Logger,
+	log *logger.Logger,
 	sessionManager SessionManager,
 	f LoadDataFunc[T],
 ) (T, error) {
@@ -51,7 +52,7 @@ func RunInTxCommit[T any](
 	// создать сессию и открыть транзакцию
 	ts := sessionManager.CreateSession()
 	if err := ts.Start(); err != nil {
-		// log.Errorln(fmt.Sprintf("ошибка открытия транзакции; ошибка: %v", err))
+		log.Db.Errorln(fmt.Sprintf("ошибка открытия транзакции; ошибка: %v", err))
 		return zero, global.ErrInternalError
 	}
 	defer ts.Rollback()
@@ -68,7 +69,7 @@ func RunInTxCommit[T any](
 
 	// закоммитить транзакцию
 	if err := ts.Commit(); err != nil {
-		// log.Errorln(fmt.Sprintf("ошибка коммита транзакции; ошибка: %v", err))
+		log.Db.Errorln(fmt.Sprintf("ошибка коммита транзакции; ошибка: %v", err))
 		return zero, global.ErrInternalError
 	}
 
@@ -77,12 +78,12 @@ func RunInTxCommit[T any](
 
 func RunInTxExec(
 	ctx context.Context,
-	// log *logrus.Logger,
+	log *logger.Logger,
 	sessionManager SessionManager,
 	f ReturnErrFunc,
 ) error {
 	// выполнить функцию, результат которой не нужен
-	_, err := RunInTxCommit(ctx, sessionManager, func(ctx context.Context) (struct{}, error) {
+	_, err := RunInTxCommit(ctx, log, sessionManager, func(ctx context.Context) (struct{}, error) {
 		err := f(ctx)
 		return struct{}{}, err
 	})

@@ -8,6 +8,7 @@ import (
 	"learn_bot_admin_panel/external/rest_api"
 	"learn_bot_admin_panel/external/rest_api/middleware"
 	"learn_bot_admin_panel/internal/chanel_bus"
+	"learn_bot_admin_panel/internal/entity/profile"
 	"learn_bot_admin_panel/internal/transaction"
 	"learn_bot_admin_panel/rimport"
 	"learn_bot_admin_panel/tools/logger"
@@ -97,12 +98,13 @@ func main() {
 	}
 
 	// инициализация event bus авторизация
-	authChan := chanel_bus.NewAuthChan()
+	authChan := chanel_bus.NewBusChanel[profile.User]()
+	twoStepAuthChan := chanel_bus.NewBusChanel[bool]()
 	// инициализация репо
 	ri := rimport.NewRepositoryImports(config, rdb)
 
 	// инициализация usecase
-	ui := uimport.NewUsecaseImport(ri, logger, authChan, config)
+	ui := uimport.NewUsecaseImport(ri, logger, authChan, twoStepAuthChan, config, b)
 
 	//
 	middleware := middleware.NewAuthMiddleware(ui.Jwt)

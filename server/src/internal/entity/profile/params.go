@@ -17,24 +17,6 @@ type PasswordLoginParam struct {
 	Password string `json:"password"`
 }
 
-type PasswordLoginResponse struct {
-	NeedTwoStepAuth bool        `json:"need_two_step_auth"`
-	UserID          int         `json:"u_id"`
-	Access          AccessRight `json:"access_right"`
-}
-
-func NewPasswordLoginResponse(
-	needTwoStepAuth bool,
-	userID int,
-	access AccessRight,
-) PasswordLoginResponse {
-	return PasswordLoginResponse{
-		NeedTwoStepAuth: needTwoStepAuth,
-		UserID:          userID,
-		Access:          access,
-	}
-}
-
 type SetPasswordParam struct {
 	Password string `json:"password"`
 }

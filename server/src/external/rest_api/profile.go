@@ -150,6 +150,7 @@ func (h *ProfileHandler) HandleTgLogin(gctx *gin.Context) {
 
 	err = transaction.RunInTxExec(
 		gctx,
+		h.log,
 		h.sm,
 		func(ctx context.Context) error {
 			return h.ui.Profile.CreateUserDeviceIDIfNotExists(ctx, userDataWithToken.UserData.ID, deviceID)
@@ -249,6 +250,7 @@ func (h *ProfileHandler) HandleCreatePassword(gctx *gin.Context) {
 
 	err := transaction.RunInTxExec(
 		gctx,
+		h.log,
 		h.sm,
 		func(ctx context.Context) error {
 			return h.ui.Profile.SetProfilePassword(ctx, param.Password, claimsData.UserID)

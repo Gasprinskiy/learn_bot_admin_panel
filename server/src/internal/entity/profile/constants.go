@@ -39,5 +39,5 @@ func (s AccessRight) HasInAccessRightMap() bool {
 }
 
 const (
-	AuthSuccessfulyMessage = "Авторизация прошла успешно, можете вернутся обратно!"
+	AuthSuccessfulyMessage = "Здравствуйте %s, Авторизация прошла успешно, можете вернутся обратно!"
 )

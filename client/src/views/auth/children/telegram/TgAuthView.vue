@@ -1,38 +1,14 @@
 <script lang="ts" setup>
-import { computed, onBeforeUnmount, onBeforeMount, onMounted, shallowRef } from 'vue';
+import { onBeforeUnmount, onBeforeMount } from 'vue';
 import { NButton, NDivider, NQrCode, NSpace } from 'naive-ui';
 import { useRouter } from 'vue-router';
 
 import { useAuth } from '@/composables/use_auth';
-import { useConfig } from '@/composables/use_config';
+import { useSSETimeOutCountDown } from '@/views/auth/composables/use_sse_count_down';
 
 const router = useRouter();
 const { redirectWindow, tempData, closeRedirectWindow, closeEventSource } = useAuth();
-const { SSETTL } = useConfig();
-
-const countDownLeftMinutes = shallowRef<number>(SSETTL);
-const countDownLeftSeconds = shallowRef<number>(0);
-const countDownIntervalId = shallowRef<number | undefined>(undefined);
-
-const countDownView = computed<string>(() => {
-  const decimal = countDownLeftSeconds.value >= 10 ? `${countDownLeftSeconds.value}` : `0${countDownLeftSeconds.value}`;
-  return `${countDownLeftMinutes.value}:${decimal}`;
-});
-
-function startCountDown() {
-  countDownIntervalId.value = setInterval(() => {
-    if (countDownLeftMinutes.value < 0) {
-      clearInterval(countDownIntervalId.value);
-    }
-
-    if (countDownLeftSeconds.value === 0) {
-      countDownLeftSeconds.value = 60;
-      countDownLeftMinutes.value -= 1;
-    }
-
-    countDownLeftSeconds.value -= 1;
-  }, 1000);
-}
+const { countDownView } = useSSETimeOutCountDown();
 
 onBeforeMount(async () => {
   if (!tempData.value) {
@@ -42,14 +18,9 @@ onBeforeMount(async () => {
   }
 });
 
-onMounted(() => {
-  startCountDown();
-});
-
 onBeforeUnmount(() => {
   closeRedirectWindow();
   closeEventSource();
-  clearInterval(countDownIntervalId.value);
 });
 </script>
 
