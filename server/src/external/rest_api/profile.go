@@ -58,6 +58,11 @@ func NewProfileHandler(
 		)
 
 		group.GET(
+			"/two_step_listen/:temp_id",
+			handler.HandleAuthListen,
+		)
+
+		group.GET(
 			"/tg_login/:temp_id",
 			handler.HandleTgLogin,
 		)

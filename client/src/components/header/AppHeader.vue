@@ -24,7 +24,7 @@ function toggleTheme() {
     <div class="app-header__inner">
       <div class="app-header__logo">
         <img
-          src="../../assets/vue.svg"
+          src="@/assets/vue.svg"
           alt="Logo"
         >
       </div>

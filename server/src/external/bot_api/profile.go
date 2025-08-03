@@ -2,10 +2,12 @@ package bot_api
 
 import (
 	"context"
+	"fmt"
 	"learn_bot_admin_panel/config"
 	"learn_bot_admin_panel/internal/entity/telegram"
 	"learn_bot_admin_panel/internal/transaction"
 	"learn_bot_admin_panel/tools/bot_tool"
+	"learn_bot_admin_panel/tools/dump"
 	"learn_bot_admin_panel/tools/logger"
 	"learn_bot_admin_panel/uimport"
 
@@ -42,6 +44,13 @@ func NewBotProfileHandler(
 		bot.MatchTypePrefix,
 		handler.TgAuthHandler,
 	)
+
+	b.RegisterHandler(
+		bot.HandlerTypeCallbackQueryData,
+		"knowledge:",
+		bot.MatchTypePrefix,
+		handler.TwoStepAuthHandler,
+	)
 }
 
 func (h *BotProfileHandler) TgAuthHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
@@ -60,4 +69,8 @@ func (h *BotProfileHandler) TgAuthHandler(ctx context.Context, b *bot.Bot, updat
 	}
 
 	bot_tool.SendHTMLParseModeMessage(ctx, b, update, message)
+}
+
+func (h *BotProfileHandler) TwoStepAuthHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
+	fmt.Println("UPDATE: ", dump.Struct(update))
 }

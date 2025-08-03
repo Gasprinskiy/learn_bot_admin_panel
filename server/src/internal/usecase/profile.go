@@ -8,6 +8,7 @@ import (
 	"learn_bot_admin_panel/internal/chanel_bus"
 	"learn_bot_admin_panel/internal/entity/global"
 	"learn_bot_admin_panel/internal/entity/profile"
+	"learn_bot_admin_panel/internal/entity/telegram"
 	"learn_bot_admin_panel/internal/transaction"
 	"learn_bot_admin_panel/rimport"
 	"learn_bot_admin_panel/tools/logger"
@@ -118,13 +119,47 @@ func (u *Profile) TgAuthVerify(ctx context.Context, userName, text string, TGID 
 		return message, err
 	}
 
-	return fmt.Sprintf(profile.AuthSuccessfulyMessage, user.FirstName), nil
+	return fmt.Sprintf(telegram.AuthSuccessfulyMessage, user.FirstName), nil
 }
 
 func (u *Profile) WaitTgAuthVerify(ctx context.Context, authKey string) ([]byte, error) {
 	var data []byte
 
 	authSession, exists := u.authChan.Read(authKey)
+	if !exists {
+		return data, global.ErrNoData
+	}
+
+	defer u.authChan.CleanUp(authKey)
+
+	select {
+	case <-ctx.Done():
+		return data, global.ErrExpired
+
+	case authChanel := <-authSession.Chan:
+		userData := authChanel.Data
+
+		if authChanel.Error != nil {
+			return data, authChanel.Error
+		}
+
+		err := u.ri.Repository.AuthCache.SetTempUserData(ctx, authKey, userData)
+		if err != nil {
+			u.log.Db.Errorln("не удалось записать временные данные пользователя в кеш:", err)
+			return data, global.ErrInternalError
+		}
+
+		return json.Marshal(userData.NewUserFirstLoginAnswer())
+
+	case <-time.After(u.config.SSETTL):
+		return data, global.ErrExpired
+	}
+}
+
+func (u *Profile) WaitTgTwoStepAuthVerify(ctx context.Context, authKey string) ([]byte, error) {
+	var data []byte
+
+	authSession, exists := u.twoStepAuthChan.Read(authKey)
 	if !exists {
 		return data, global.ErrNoData
 	}
@@ -244,14 +279,21 @@ func (u *Profile) OnPasswordLogin(ctx context.Context, param profile.PasswordLog
 			uuID = uuid.NewString()
 			u.twoStepAuthChan.Create(uuID, u.config.SSETTL)
 
-			message, err := u.b.SendMessage(ctx, &bot.SendMessageParams{
-				ChatID: userInfo.TgID.Int64,
-				Text:   "Обнаружен вход с нового устройства, это были вы?",
+			_, err := u.b.SendMessage(ctx, &bot.SendMessageParams{
+				ChatID:    userInfo.TgID.Int64,
+				Text:      fmt.Sprintf(telegram.TwoStepAuthMessage, userInfo.FirstName),
+				ParseMode: "HTML",
 				ReplyMarkup: &models.InlineKeyboardMarkup{
 					InlineKeyboard: [][]models.InlineKeyboardButton{
 						{
-							{Text: "❌ Нет", CallbackData: "tow_step_auth:no"},
-							{Text: "✅ Да", CallbackData: "tow_step_auth:yes"},
+							{
+								Text:         telegram.TwoStepAuthCallBackQueryButtonsMap[telegram.TwoStepAuthCallBackQueryDecline],
+								CallbackData: telegram.TwoStepAuthCallBackQueryDecline,
+							},
+							{
+								Text:         telegram.TwoStepAuthCallBackQueryButtonsMap[telegram.TwoStepAuthCallBackQueryAccept],
+								CallbackData: telegram.TwoStepAuthCallBackQueryAccept,
+							},
 						},
 					},
 				},
@@ -261,8 +303,6 @@ func (u *Profile) OnPasswordLogin(ctx context.Context, param profile.PasswordLog
 				u.log.Db.WithFields(lf).Errorln(u.logPrefix(), "не удалось отправить сообщения о подтверждении", err)
 				return zero, global.ErrInternalError
 			}
-
-			fmt.Println("message: ", message)
 		}
 
 		needTwoStepAuth = !exists

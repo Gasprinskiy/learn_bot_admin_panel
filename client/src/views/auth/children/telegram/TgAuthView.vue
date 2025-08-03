@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { onBeforeUnmount, onBeforeMount } from 'vue';
+import { onBeforeMount } from 'vue';
 import { NButton, NDivider, NQrCode, NSpace } from 'naive-ui';
 import { useRouter } from 'vue-router';
 
@@ -7,7 +7,7 @@ import { useAuth } from '@/composables/use_auth';
 import { useSSETimeOutCountDown } from '@/views/auth/composables/use_sse_count_down';
 
 const router = useRouter();
-const { redirectWindow, tempData, closeRedirectWindow, closeEventSource } = useAuth();
+const { redirectWindow, tempData } = useAuth();
 const { countDownView } = useSSETimeOutCountDown();
 
 onBeforeMount(async () => {
@@ -16,11 +16,6 @@ onBeforeMount(async () => {
       name: 'auth',
     });
   }
-});
-
-onBeforeUnmount(() => {
-  closeRedirectWindow();
-  closeEventSource();
 });
 </script>
 

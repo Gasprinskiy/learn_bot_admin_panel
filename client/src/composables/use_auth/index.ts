@@ -64,7 +64,6 @@ export function useAuth() {
       onRequestError();
       closeEventSource();
       closeRedirectWindow();
-      clearTempData();
     });
   }
 
