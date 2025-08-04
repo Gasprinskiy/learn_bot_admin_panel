@@ -12,7 +12,7 @@ const params = shallowReactive<PasswordLoginParams>({
   password: '',
 });
 
-const validators: Record<string, Record<string, any>> = {
+const validators: Record<keyof PasswordLoginParams, Record<string, any>> = {
   user_name: { required, minLength: minLength(5) },
   password: { required, minLength: minLength(7) },
 };
@@ -47,11 +47,11 @@ const passwordInvalidMessage = computed<string | null>(() => {
 const userNameInputStatus = computed<FormValidationStatus>(() => getFieldValidationStatus('user_name'));
 const passwordInputStatus = computed<FormValidationStatus>(() => getFieldValidationStatus('password'));
 
-function isFieldInvalid(fieldName: string): boolean {
+function isFieldInvalid(fieldName: keyof PasswordLoginParams): boolean {
   return v$.value[fieldName]?.$dirty && v$.value[fieldName]?.$invalid;
 }
 
-function getFieldValidationStatus(fieldName: string): FormValidationStatus {
+function getFieldValidationStatus(fieldName: keyof PasswordLoginParams): FormValidationStatus {
   return isFieldInvalid(fieldName) ? 'error' : 'success';
 }
 
@@ -100,6 +100,7 @@ async function onLoginSubmit() {
         type="password"
         placeholder="Пароль"
         :status="passwordInputStatus"
+        show-password-on="click"
       />
 
       <span

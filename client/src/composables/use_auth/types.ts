@@ -1,4 +1,4 @@
-import type { AuthTempData, LoginParams } from '@/shared/types/profile';
+import type { AuthTempData } from '@/shared/types/profile';
 import type { UseRedirectWindowReturnType } from '@/composables/use_redirect_window/types';
 
 export interface UseAuthState {
@@ -14,10 +14,4 @@ export interface ListenTgAuthSourceParams {
 
 export interface TgAuthParams extends Omit<ListenTgAuthSourceParams, 'authId'> {
   onTempDataCreate: () => void;
-}
-
-export interface LoginCommonParams {
-  tempID: string | null;
-  loginParams: LoginParams | null;
-  isPassowrdSet: boolean;
 }

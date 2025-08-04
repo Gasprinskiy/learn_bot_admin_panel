@@ -33,7 +33,7 @@
   &__right {
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 5px;
   }
 
   &__link {
@@ -42,5 +42,13 @@
     &.router-link-active {
       color: #5fbc21;
     }
+
+    &.router-link-active &-button {
+      color: #5fbc21;
+    }
+  }
+
+  svg {
+    transform: scale(1.2);
   }
 }

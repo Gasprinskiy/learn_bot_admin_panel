@@ -36,4 +36,5 @@ export interface PasswordLoginResponse {
   need_two_step_auth: boolean;
   u_id: number;
   access_right: AccessRight;
+  uu_id: string;
 }

@@ -90,9 +90,7 @@ async function onChoseTgAsAuthMethod() {
             @click="onAuthMehtodChose(AuthMethod.STANDART)"
           >
             <template #icon>
-              <NIcon>
-                <PasswordOutlined />
-              </NIcon>
+              <NIcon :component="PasswordOutlined" />
             </template>
 
             <template #default>
@@ -112,9 +110,7 @@ async function onChoseTgAsAuthMethod() {
             @click="onChoseTgAsAuthMethod"
           >
             <template #icon>
-              <NIcon>
-                <TelegramOutlined />
-              </NIcon>
+              <NIcon :component="TelegramOutlined" />
             </template>
 
             <template #default>
@@ -130,7 +126,7 @@ async function onChoseTgAsAuthMethod() {
             </template>
 
             <template #default>
-              В случае если вы не выставили пароль для аккаунта или это ваш первый вход вам нужно пройти авторизацию через Telegram
+              Авторизация через Telegram обязательна при первом входе или если пароль не установлен.
             </template>
           </NAlert>
         </div>

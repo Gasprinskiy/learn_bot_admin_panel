@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NDivider, NScrollbar, NSkeleton, useLoadingBar, useMessage } from 'naive-ui';
+import { NDivider, NScrollbar, useLoadingBar, useMessage } from 'naive-ui';
 import { useApiRequestEventBus } from '@/composables/use_api_requests_event_bus';
 import { onMounted, shallowRef } from 'vue';
 import { useRouter } from 'vue-router';
@@ -7,11 +7,14 @@ import { useRouter } from 'vue-router';
 import { useAuth } from './composables/use_auth';
 import AppHeader from './components/header/AppHeader.vue';
 import type { UseApiRequestEventBusEvents } from './composables/use_api_requests_event_bus/types';
+import ModalProvider from './components/modal-provider/ModalProvider.vue';
+import { useModal } from './composables/use_modal';
 
 const router = useRouter();
 const loadingBar = useLoadingBar();
 const apiEventBus = useApiRequestEventBus();
 const message = useMessage();
+const { isVisible } = useModal();
 const { checkAuthOnRouteChange } = useAuth();
 
 const isBlocked = shallowRef<boolean>(false);
@@ -40,9 +43,11 @@ router.beforeEach(checkAuthOnRouteChange);
 </script>
 
 <template>
+  <ModalProvider />
+
   <div
     class="app-wrapper"
-    :class="{ blocked: isBlocked }"
+    :class="{ blocked: isBlocked || isVisible }"
   >
     <AppHeader />
     <NDivider class="app-wrapper__divider" />

@@ -26,14 +26,14 @@ const profileRoute: ReadonlyRecordRaw = {
 };
 
 const createProfileRoute: ReadonlyRecordRaw = {
-  name: 'create_profile',
-  path: '/create_profile',
+  name: 'staff',
+  path: '/staff',
   meta: {
     relatedToAccessRights: true,
     accessRights: { [AccessRight.AccessRightFull]: true },
   },
   component: () => {
-    return import('@/views/create_profile/CreateProfileView.vue');
+    return import('@/views/staff/StaffView.vue');
   },
 };
 
@@ -45,11 +45,11 @@ const teacherTasksRoute: ReadonlyRecordRaw = {
     accessRights: {
       [AccessRight.AccessRightFull]: true,
       [AccessRight.AccessRightManager]: true,
-      [AccessRight.AccessRightTeacher]: true
+      [AccessRight.AccessRightTeacher]: true,
     },
   },
   component: () => {
-    return import('@/views/create_profile/CreateProfileView.vue');
+    return import('@/views/teacher_tasks/TeacherTaskView.vue');
   },
 };
 
@@ -67,6 +67,22 @@ const usersListRoute: ReadonlyRecordRaw = {
     return import('@/views/users_list/UsersListView.vue');
   },
 };
+
+const videoContentRoute: ReadonlyRecordRaw = {
+  name: 'video_content',
+  path: '/video_content',
+  meta: {
+    relatedToAccessRights: true,
+    accessRights: {
+      [AccessRight.AccessRightFull]: true,
+      [AccessRight.AccessRightManager]: true,
+      [AccessRight.AccessRightTeacher]: true,
+    },
+  },
+  component: () => {
+    return import('@/views/video_content/VideoContent.vue');
+  },
+};
 //
 export const DefaultRoutes: ReadonlyRecordRaw[] = [
   homeRoute,
@@ -78,19 +94,17 @@ export const RoutesByAccessRightList: ReadonlyRoutesByAccessRight = {
     createProfileRoute,
     teacherTasksRoute,
     usersListRoute,
+    videoContentRoute,
   ],
 
   [AccessRight.AccessRightManager]: [
     teacherTasksRoute,
     usersListRoute,
+    videoContentRoute,
   ],
 
   [AccessRight.AccessRightTeacher]: [
-    {
-      ...teacherTasksRoute,
-      meta: {
-        isTeacher: true,
-      },
-    },
+    videoContentRoute,
+    teacherTasksRoute,
   ],
 };

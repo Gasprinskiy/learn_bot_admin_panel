@@ -12,6 +12,7 @@ import type { AuthTempData, UserFirstLoginAnswer, UserShortInfo, AccessRight, Us
 
 import type { ListenTgAuthSourceParams, TgAuthParams, UseAuthState } from './types';
 import { ErrorMessagesByCode, PasswordLoginErrorMessagesByCode } from './constants';
+import type { ResponseWithBoolStatus } from '@/shared/types/common';
 
 const hasToken = useStorage('has_token', false);
 
@@ -27,7 +28,7 @@ export function useAuth() {
   const router = useRouter();
 
   const { ApiURL } = useConfig();
-  const { buildRoutesByAccessRight } = useProtectedRoutes();
+  const { setRoutesByAccesRight } = useProtectedRoutes();
 
   const tempDataLoading = shallowRef<boolean>(false);
 
@@ -42,6 +43,10 @@ export function useAuth() {
       name: 'Авторизация через телеграм',
     });
 
+    _listenAuthSource(params);
+  }
+
+  function _listenAuthSource(params: ListenTgAuthSourceParams) {
     const { authId, onRequestError } = params;
 
     const url = `${ApiURL}/auth/listen/${authId}`;
@@ -65,7 +70,7 @@ export function useAuth() {
       closeEventSource();
       closeRedirectWindow();
     });
-  }
+  };
 
   async function getTgAuthDataAndListen(params: TgAuthParams) {
     if (tempDataLoading.value) {
@@ -96,7 +101,7 @@ export function useAuth() {
   async function checkAuthOnFirstRun() {
     try {
       const response = await _authCheck();
-      await buildRoutesByAccessRight(response.access_right);
+      setRoutesByAccesRight(response.access_right);
     } catch (e) {
       if (hasToken.value) {
         const stauts = +(e as any).status || 500;
@@ -139,6 +144,10 @@ export function useAuth() {
         }
       }
 
+      if (to.name === 'home') {
+        setRoutesByAccesRight(user.access_right);
+      }
+
       hasToken.value = true;
       next();
     } catch (e) {
@@ -153,7 +162,7 @@ export function useAuth() {
     try {
       const response = await $api<UserShortInfo>(`/auth/tg_login/${tempID}`);
 
-      await buildRoutesByAccessRight(response.access_right);
+      setRoutesByAccesRight(response.access_right);
 
       message.success('Авторизация прошла успешно');
 
@@ -189,13 +198,23 @@ export function useAuth() {
 
       if (response.need_two_step_auth) {
         message.info('Требуется подтверждение');
+
         await router.replace({
           name: 'two-step-verification',
+        });
+
+        _listenAuthSource({
+          authId: response.uu_id,
+          onRequestError: async () => {
+            await router.replace({
+              name: 'password-auth',
+            });
+          },
         });
         return;
       }
 
-      await buildRoutesByAccessRight(response.access_right);
+      setRoutesByAccesRight(response.access_right);
 
       message.success('Авторизация прошла успешно');
 
@@ -218,6 +237,25 @@ export function useAuth() {
       const stauts = +(e as any).status || 500;
       message.error(ErrorMessagesByCode[stauts]);
       return null;
+    }
+  }
+
+  async function createPassword(password: string): Promise<boolean> {
+    try {
+      const response = await $api<ResponseWithBoolStatus>('/auth/create_password', {
+        method: 'POST',
+        body: {
+          password,
+        },
+      });
+      if (response.success) {
+        message.success('Пароль для учетной записи создан');
+      }
+      return response.success;
+    } catch (e) {
+      const stauts = +(e as any).status || 500;
+      message.error(ErrorMessagesByCode[stauts]);
+      return false;
     }
   }
 
@@ -248,5 +286,6 @@ export function useAuth() {
     closeRedirectWindow,
     clearTempData,
     checkAuthOnRouteChange,
+    createPassword,
   };
 }

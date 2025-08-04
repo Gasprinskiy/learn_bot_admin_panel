@@ -6,6 +6,7 @@ import { MoonOutline, SunnyOutline } from '@vicons/ionicons5';
 
 import { useAppTheme } from '@/composables/use_app_theme';
 import { useAuth } from '@/composables/use_auth';
+import { PersonSharp } from '@vicons/material';
 
 const { currentTheme, setCurrentTheme } = useAppTheme();
 const { isAuthorized } = useAuth();
@@ -23,7 +24,14 @@ function toggleTheme() {
   <div class="app-header">
     <div class="app-header__inner">
       <div class="app-header__logo">
+        <RouterLink v-if="isAuthorized" to="/">
+          <img
+            src="@/assets/vue.svg"
+            alt="Logo"
+          >
+        </RouterLink>
         <img
+          v-else
           src="@/assets/vue.svg"
           alt="Logo"
         >
@@ -35,7 +43,18 @@ function toggleTheme() {
           class="app-header__link"
           to="/profile"
         >
-          Профиль
+          <NButton
+            quaternary
+            circle
+            class="app-header__link-button"
+          >
+            <template #icon>
+              <NIcon
+                size="20"
+                :component="PersonSharp"
+              />
+            </template>
+          </NButton>
         </RouterLink>
 
         <NButton
