@@ -8,11 +8,19 @@ import $api from '@/packages/api/client';
 import { useConfig } from '@/composables/use_config';
 import { useRedirectWindow } from '@/composables/use_redirect_window';
 import { useProtectedRoutes } from '@/composables/use_protected_routes';
-import type { AuthTempData, UserFirstLoginAnswer, UserShortInfo, AccessRight, User, PasswordLoginParams, PasswordLoginResponse } from '@/shared/types/profile';
+import type { ResponseWithBoolStatus } from '@/shared/types/common';
+import type {
+  AuthTempData,
+  UserFirstLoginAnswer,
+  UserShortInfo,
+  AccessRight,
+  User,
+  PasswordLoginParams,
+  PasswordLoginResponse,
+} from '@/shared/types/profile';
 
 import type { ListenTgAuthSourceParams, TgAuthParams, UseAuthState } from './types';
 import { ErrorMessagesByCode, PasswordLoginErrorMessagesByCode } from './constants';
-import type { ResponseWithBoolStatus } from '@/shared/types/common';
 
 const hasToken = useStorage('has_token', false);
 
@@ -259,6 +267,28 @@ export function useAuth() {
     }
   }
 
+  async function logOut() {
+    try {
+      const response = await $api<ResponseWithBoolStatus>('/auth/log_out', {
+        method: 'POST',
+      });
+
+      if (response.success) {
+        hasToken.value = false;
+
+        await router.replace({
+          name: 'auth',
+        });
+        message.info('Выход из аккаунта');
+      }
+      return response.success;
+    } catch (e) {
+      const stauts = +(e as any).status || 500;
+      message.error(ErrorMessagesByCode[stauts]);
+      return false;
+    }
+  }
+
   function closeEventSource() {
     state.eventSource?.close();
     state.eventSource = null;
@@ -287,5 +317,6 @@ export function useAuth() {
     clearTempData,
     checkAuthOnRouteChange,
     createPassword,
+    logOut,
   };
 }

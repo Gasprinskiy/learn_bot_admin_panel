@@ -1,22 +1,40 @@
 <script lang="ts" setup>
-import { computed } from 'vue';
-import type { Component } from 'vue';
-import { darkTheme, lightTheme, NButton, NIcon } from 'naive-ui';
+import { computed, h } from 'vue';
+import type { Component, VNodeChild } from 'vue';
+import { NButton, NDropdown, NIcon } from 'naive-ui';
+import type { DropdownMixedOption } from 'naive-ui/es/dropdown/src/interface';
+
+import { DoneFilled, PersonSharp, SettingsSharp } from '@vicons/material';
 import { MoonOutline, SunnyOutline } from '@vicons/ionicons5';
 
 import { useAppTheme } from '@/composables/use_app_theme';
 import { useAuth } from '@/composables/use_auth';
-import { PersonSharp } from '@vicons/material';
+import { usePerformanceSettings } from '@/composables/use_performance_settings';
+import type { VisualMode } from '@/composables/use_performance_settings/types';
 
-const { currentTheme, setCurrentTheme } = useAppTheme();
 const { isAuthorized } = useAuth();
+const { isDarkTheme, toggleTheme } = useAppTheme();
+const { VisualModeOptions, currentMode, setMode } = usePerformanceSettings();
 
-const isDarkTheme = computed<boolean>(() => currentTheme.value === darkTheme);
 const themeIcon = computed<Component>(() => isDarkTheme.value ? SunnyOutline : MoonOutline);
+const visualModeOptionsView = computed<Array<DropdownMixedOption>>(() => {
+  return VisualModeOptions.map(({ value, label }) => {
+    return {
+      label,
+      key: value,
+      icon: () => renderVisualModeOptionIcon(value),
+    };
+  });
+});
 
-function toggleTheme() {
-  const theme = isDarkTheme.value ? lightTheme : darkTheme;
-  setCurrentTheme(theme);
+function renderVisualModeOptionIcon(value: VisualMode): VNodeChild | undefined {
+  if (value !== currentMode.value) {
+    return;
+  }
+
+  return h(NIcon, null, {
+    default: () => h(DoneFilled),
+  });
 }
 </script>
 
@@ -56,6 +74,24 @@ function toggleTheme() {
             </template>
           </NButton>
         </RouterLink>
+
+        <NDropdown
+          :options="visualModeOptionsView"
+          trigger="click"
+          @select="setMode"
+        >
+          <NButton
+            quaternary
+            circle
+          >
+            <template #icon>
+              <NIcon
+                size="20"
+                :component="SettingsSharp"
+              />
+            </template>
+          </NButton>
+        </NDropdown>
 
         <NButton
           quaternary

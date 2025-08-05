@@ -1,11 +1,11 @@
-import { reactive, toRefs } from 'vue';
+import { shallowReactive, toRefs } from 'vue';
 
 import type { AccessRight } from '@/shared/types/profile';
 
 import type { UseProtectedRoutesState } from './types';
 import { RoutesByAccessRight } from './constants';
 
-const state = reactive<UseProtectedRoutesState>({
+const state = shallowReactive<UseProtectedRoutesState>({
   protecredRoutes: [],
 });
 

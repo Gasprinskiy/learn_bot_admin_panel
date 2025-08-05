@@ -4,11 +4,11 @@ import { useModal } from '@/composables/use_modal';
 import type { ConvertEmitType } from '@/packages/types';
 import type { User } from '@/shared/types/profile';
 import { LogOutOutlined, PasswordOutlined, TelegramOutlined } from '@vicons/material';
-import { NAlert, NButton, NCard, NIcon, NTag } from 'naive-ui';
+import { NAlert, NButton, NCard, NIcon, NPopconfirm, NTag } from 'naive-ui';
 import { computed, defineAsyncComponent, onBeforeMount, ref } from 'vue';
 import type { SetPasswordEmits } from './components/set_password/types';
 
-const { getUserInfo, createPassword } = useAuth();
+const { getUserInfo, createPassword, logOut } = useAuth();
 const { showModal, closeModal } = useModal();
 
 const userInfo = ref<User | null>(null);
@@ -101,15 +101,27 @@ onBeforeMount(fetchUserInfo);
           </template>
         </NButton>
 
-        <NButton type="error">
-          <template #icon>
-            <NIcon :component="LogOutOutlined" />
+        <NPopconfirm
+          positive-text="Да"
+          negative-text="Отмена"
+          @positive-click="logOut"
+        >
+          <template #trigger>
+            <NButton type="error">
+              <template #icon>
+                <NIcon :component="LogOutOutlined" />
+              </template>
+
+              <template #default>
+                Выйти
+              </template>
+            </NButton>
           </template>
 
           <template #default>
-            Выйти
+            Вы уверены что хотите выйти?
           </template>
-        </NButton>
+        </NPopconfirm>
       </div>
     </NCard>
 

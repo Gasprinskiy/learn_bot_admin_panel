@@ -6,16 +6,21 @@
   padding: 0;
 }
 
-*,
-*::before,
-*::after {
+body.performance,
+body.performance *,
+body.performance *::before,
+body.performance *::after {
   animation: none !important;
   transition: none !important;
   scroll-behavior: auto !important;
+  animation-duration: 0s !important;
+  box-shadow: none !important;
+  filter: none !important;
+  backdrop-filter: none !important;
+  background-image: none !important;
 }
 
 html {
-  scroll-behavior: smooth;
   text-size-adjust: 100%;
 }
 
