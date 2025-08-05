@@ -57,7 +57,6 @@ func (ac *BusChanel[T]) Create(key string, expiryDur time.Duration) {
 	}
 	ac.mu.Unlock()
 
-	go ac.sleepCleanUp(key, expiryDur)
 }
 
 func (ac *BusChanel[T]) CleanUp(key string) {
@@ -72,9 +71,4 @@ func (ac *BusChanel[T]) CleanUp(key string) {
 	delete(ac.sessions, key)
 
 	ac.mu.Unlock()
-}
-
-func (ac *BusChanel[T]) sleepCleanUp(key string, expiryDur time.Duration) {
-	time.Sleep(expiryDur + time.Second)
-	ac.CleanUp(key)
 }

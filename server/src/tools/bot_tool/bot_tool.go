@@ -20,6 +20,19 @@ func SendHTMLParseModeMessage(
 	})
 }
 
+func SendHTMLParseModeMessageFromCallBackQuery(
+	ctx context.Context,
+	b *bot.Bot,
+	update *models.Update,
+	message string,
+) {
+	b.SendMessage(ctx, &bot.SendMessageParams{
+		ChatID:    update.CallbackQuery.From.ID,
+		Text:      message,
+		ParseMode: "HTML",
+	})
+}
+
 // func SendReplyKeyboardMessage(
 // 	ctx context.Context,
 // 	b *bot.Bot,

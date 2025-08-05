@@ -19,7 +19,7 @@ func NewUsecaseImport(
 	ri *rimport.RepositoryImports,
 	log *logger.Logger,
 	authChan *chanel_bus.BusChanel[profile.User],
-	twoStepAuthChan *chanel_bus.BusChanel[bool],
+	twoStepAuthChan *chanel_bus.BusChanel[profile.PasswordLoginResponse],
 	conf *config.Config,
 	b *bot.Bot,
 ) *UsecaseImport {

@@ -48,7 +48,7 @@ func NewConfig() *Config {
 		ServerPort:   fmt.Sprintf(":%s", os.Getenv("HTTP_SERVER_PORT")),
 		RedisAddr:    fmt.Sprintf("redis:%s", os.Getenv("REDIS_PORT")),
 		RedisTTL:     time.Minute * time.Duration(redisTtl),
-		JwtSecretTTL: time.Minute * time.Duration(jwtSecretTtl),
+		JwtSecretTTL: time.Hour * time.Duration(jwtSecretTtl),
 		SSETTL:       time.Minute * time.Duration(sseTtl),
 	}
 }

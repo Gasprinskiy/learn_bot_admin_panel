@@ -14,17 +14,29 @@ var (
 	}
 )
 
+const TwoStepAuthPrefix = "tow_step_auth"
+
 const (
-	TwoStepAuthCallBackQueryAccept  = "tow_step_auth:accept"
-	TwoStepAuthCallBackQueryDecline = "tow_step_auth:yes"
+	TwoStepAuthAccept  = "accept"
+	TwoStepAuthDecline = "decline"
 )
 
-var TwoStepAuthCallBackQueryButtonsMap = map[string]string{
-	TwoStepAuthCallBackQueryAccept:  "✅ Да",
-	TwoStepAuthCallBackQueryDecline: "❌ Нет",
-}
+var (
+	TwoStepAuthCallBackQueryAccept = func(uuID string) string {
+		return fmt.Sprintf("%s:%s:%s", TwoStepAuthPrefix, TwoStepAuthAccept, uuID)
+	}
+	TwoStepAuthCallBackQueryDecline = func(uuID string) string {
+		return fmt.Sprintf("%s:%s:%s", TwoStepAuthPrefix, TwoStepAuthDecline, uuID)
+	}
+)
 
 const (
-	AuthSuccessfulyMessage = "Здравствуйте %s, Авторизация прошла успешно, можете вернутся обратно!"
-	TwoStepAuthMessage     = "<b>%s.</b>,<br> Обнаружен вход с нового устройства, это были вы?"
+	TwoStepAuthCallBackQueryAcceptView  = "✅ Да"
+	TwoStepAuthCallBackQueryDeclineView = "❌ Нет"
+)
+
+const (
+	AuthSuccessfulyMessage    = "Здравствуйте %s! Авторизация прошла успешно, можете вернутся обратно!"
+	TwoStepAuthMessage        = "%s! Обнаружен вход с нового устройства, это были вы?"
+	TwoStepAuthDeclineMessage = "⚠️ Спасибо за подтверждение.\n\nМы зафиксировали подозрительную попытку входа в ваш аккаунт и заблокировали её.\n\nВ целях безопасности мы рекомендуем cменить пароль от аккаунта"
 )

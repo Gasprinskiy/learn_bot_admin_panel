@@ -2,12 +2,10 @@ package bot_api
 
 import (
 	"context"
-	"fmt"
 	"learn_bot_admin_panel/config"
 	"learn_bot_admin_panel/internal/entity/telegram"
 	"learn_bot_admin_panel/internal/transaction"
 	"learn_bot_admin_panel/tools/bot_tool"
-	"learn_bot_admin_panel/tools/dump"
 	"learn_bot_admin_panel/tools/logger"
 	"learn_bot_admin_panel/uimport"
 
@@ -47,7 +45,7 @@ func NewBotProfileHandler(
 
 	b.RegisterHandler(
 		bot.HandlerTypeCallbackQueryData,
-		"knowledge:",
+		telegram.TwoStepAuthPrefix,
 		bot.MatchTypePrefix,
 		handler.TwoStepAuthHandler,
 	)
@@ -72,5 +70,29 @@ func (h *BotProfileHandler) TgAuthHandler(ctx context.Context, b *bot.Bot, updat
 }
 
 func (h *BotProfileHandler) TwoStepAuthHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
-	fmt.Println("UPDATE: ", dump.Struct(update))
+	message, err := transaction.RunInTxCommit(
+		ctx,
+		h.log,
+		h.sm,
+		func(ctx context.Context) (string, error) {
+			return h.ui.Usecase.Profile.TwoStepTgAuthVerify(ctx, update.CallbackQuery.From.Username, update.CallbackQuery.Data, update.CallbackQuery.From.ID)
+		},
+	)
+
+	b.AnswerCallbackQuery(ctx, &bot.AnswerCallbackQueryParams{
+		CallbackQueryID: update.CallbackQuery.ID,
+		Text:            "✅",
+	})
+
+	b.DeleteMessage(ctx, &bot.DeleteMessageParams{
+		ChatID:    update.CallbackQuery.From.ID,
+		MessageID: update.CallbackQuery.Message.Message.ID,
+	})
+
+	if err != nil {
+		bot_tool.SendHTMLParseModeMessageFromCallBackQuery(ctx, b, update, telegram.MessagesByError[err])
+		return
+	}
+
+	bot_tool.SendHTMLParseModeMessageFromCallBackQuery(ctx, b, update, message)
 }

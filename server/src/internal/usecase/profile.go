@@ -14,6 +14,7 @@ import (
 	"learn_bot_admin_panel/tools/logger"
 	"learn_bot_admin_panel/tools/passencoder"
 	"learn_bot_admin_panel/tools/str"
+	"strings"
 	"time"
 
 	"github.com/go-telegram/bot"
@@ -26,7 +27,7 @@ type Profile struct {
 	ri              *rimport.RepositoryImports
 	log             *logger.Logger
 	authChan        *chanel_bus.BusChanel[profile.User]
-	twoStepAuthChan *chanel_bus.BusChanel[bool]
+	twoStepAuthChan *chanel_bus.BusChanel[profile.PasswordLoginResponse]
 	config          *config.Config
 	b               *bot.Bot
 }
@@ -35,7 +36,7 @@ func NewProfile(
 	ri *rimport.RepositoryImports,
 	log *logger.Logger,
 	authChan *chanel_bus.BusChanel[profile.User],
-	twoStepAuthChan *chanel_bus.BusChanel[bool],
+	twoStepAuthChan *chanel_bus.BusChanel[profile.PasswordLoginResponse],
 	config *config.Config,
 	b *bot.Bot,
 ) *Profile {
@@ -79,13 +80,40 @@ func (u *Profile) CreateAuthUrlResponse() (profile.AuthUrlResponse, error) {
 	return result, nil
 }
 
-func (u *Profile) TgAuthVerify(ctx context.Context, userName, text string, TGID int64) (message string, err error) {
-	var chanel chanel_bus.Chanel[profile.User]
+func (u *Profile) TwoStepTgAuthVerify(ctx context.Context, userName, callBackData string, TGID int64) (message string, err error) {
+	splitted := strings.Split(callBackData, ":")
+	if len(splitted) < 3 {
+		return message, global.ErrInvalidParam
+	}
 
+	answer := splitted[1]
+	tempID := splitted[2]
+	if answer == telegram.TwoStepAuthDecline {
+		var chanel chanel_bus.Chanel[profile.User]
+
+		chanel.Error = global.ErrPermissionDenied
+		done := u.authChan.Write(tempID, chanel)
+		if !done {
+			return message, global.ErrExpired
+		}
+
+		return telegram.TwoStepAuthDeclineMessage, nil
+	}
+
+	return u.TgAuthVerifyAnswer(ctx, userName, tempID, TGID)
+}
+
+func (u *Profile) TgAuthVerify(ctx context.Context, userName, text string, TGID int64) (message string, err error) {
 	splitted := str.SplitStringByEmptySpace(text)
 	if len(splitted) < 2 {
 		return message, global.ErrInvalidParam
 	}
+
+	return u.TgAuthVerifyAnswer(ctx, userName, splitted[1], TGID)
+}
+
+func (u *Profile) TgAuthVerifyAnswer(ctx context.Context, userName, tempID string, TGID int64) (message string, err error) {
+	var chanel chanel_bus.Chanel[profile.User]
 
 	ts := transaction.MustGetSession(ctx)
 
@@ -105,12 +133,12 @@ func (u *Profile) TgAuthVerify(ctx context.Context, userName, text string, TGID 
 	if !user.IsActivated() {
 		if err = u.ri.Repository.Profile.SetProfileTGID(ts, user.ID, TGID); err != nil {
 			u.log.Db.Errorln(u.logPrefix(), "не удалось обновить telegram_id пользователя: ", err)
-			return
+			return message, global.ErrInternalError
 		}
 	}
 
 	chanel.Data = user
-	done := u.authChan.Write(splitted[1], chanel)
+	done := u.authChan.Write(tempID, chanel)
 	if !done {
 		return message, global.ErrExpired
 	}
@@ -126,40 +154,6 @@ func (u *Profile) WaitTgAuthVerify(ctx context.Context, authKey string) ([]byte,
 	var data []byte
 
 	authSession, exists := u.authChan.Read(authKey)
-	if !exists {
-		return data, global.ErrNoData
-	}
-
-	defer u.authChan.CleanUp(authKey)
-
-	select {
-	case <-ctx.Done():
-		return data, global.ErrExpired
-
-	case authChanel := <-authSession.Chan:
-		userData := authChanel.Data
-
-		if authChanel.Error != nil {
-			return data, authChanel.Error
-		}
-
-		err := u.ri.Repository.AuthCache.SetTempUserData(ctx, authKey, userData)
-		if err != nil {
-			u.log.Db.Errorln("не удалось записать временные данные пользователя в кеш:", err)
-			return data, global.ErrInternalError
-		}
-
-		return json.Marshal(userData.NewUserFirstLoginAnswer())
-
-	case <-time.After(u.config.SSETTL):
-		return data, global.ErrExpired
-	}
-}
-
-func (u *Profile) WaitTgTwoStepAuthVerify(ctx context.Context, authKey string) ([]byte, error) {
-	var data []byte
-
-	authSession, exists := u.twoStepAuthChan.Read(authKey)
 	if !exists {
 		return data, global.ErrNoData
 	}
@@ -277,7 +271,7 @@ func (u *Profile) OnPasswordLogin(ctx context.Context, param profile.PasswordLog
 
 		if !exists {
 			uuID = uuid.NewString()
-			u.twoStepAuthChan.Create(uuID, u.config.SSETTL)
+			u.authChan.Create(uuID, u.config.SSETTL)
 
 			_, err := u.b.SendMessage(ctx, &bot.SendMessageParams{
 				ChatID:    userInfo.TgID.Int64,
@@ -287,12 +281,12 @@ func (u *Profile) OnPasswordLogin(ctx context.Context, param profile.PasswordLog
 					InlineKeyboard: [][]models.InlineKeyboardButton{
 						{
 							{
-								Text:         telegram.TwoStepAuthCallBackQueryButtonsMap[telegram.TwoStepAuthCallBackQueryDecline],
-								CallbackData: telegram.TwoStepAuthCallBackQueryDecline,
+								Text:         telegram.TwoStepAuthCallBackQueryDeclineView,
+								CallbackData: telegram.TwoStepAuthCallBackQueryDecline(uuID),
 							},
 							{
-								Text:         telegram.TwoStepAuthCallBackQueryButtonsMap[telegram.TwoStepAuthCallBackQueryAccept],
-								CallbackData: telegram.TwoStepAuthCallBackQueryAccept,
+								Text:         telegram.TwoStepAuthCallBackQueryAcceptView,
+								CallbackData: telegram.TwoStepAuthCallBackQueryAccept(uuID),
 							},
 						},
 					},

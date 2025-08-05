@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"learn_bot_admin_panel/config"
 	"learn_bot_admin_panel/external/bot_api"
 	"learn_bot_admin_panel/external/rest_api"
@@ -25,13 +24,11 @@ import (
 	"github.com/go-telegram/bot"
 	"github.com/jmoiron/sqlx"
 
-	_ "github.com/lib/pq"
+	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/redis/go-redis/v9"
 )
 
 func main() {
-	fmt.Println("SUCK BOY")
-
 	var wg sync.WaitGroup
 
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
@@ -51,7 +48,7 @@ func main() {
 	}
 
 	// подключение к postgres
-	pgdb, err := sqlx.Connect("postgres", config.PostgresURL)
+	pgdb, err := sqlx.Connect("pgx", config.PostgresURL)
 	if err != nil {
 		log.Fatalln("не удалось подключиться к базе postgres: ", err)
 	}
@@ -99,7 +96,7 @@ func main() {
 
 	// инициализация event bus авторизация
 	authChan := chanel_bus.NewBusChanel[profile.User]()
-	twoStepAuthChan := chanel_bus.NewBusChanel[bool]()
+	twoStepAuthChan := chanel_bus.NewBusChanel[profile.PasswordLoginResponse]()
 	// инициализация репо
 	ri := rimport.NewRepositoryImports(config, rdb)
 

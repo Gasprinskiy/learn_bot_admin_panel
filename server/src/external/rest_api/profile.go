@@ -58,11 +58,6 @@ func NewProfileHandler(
 		)
 
 		group.GET(
-			"/two_step_listen/:temp_id",
-			handler.HandleAuthListen,
-		)
-
-		group.GET(
 			"/tg_login/:temp_id",
 			handler.HandleTgLogin,
 		)
@@ -89,8 +84,10 @@ func NewProfileHandler(
 			handler.HandleGetProfile,
 		)
 
-		group.PATCH(
-			"/change_password",
+		group.POST(
+			"/log_out",
+			handler.middleware.CheckAccesToken(),
+			handler.LogOut,
 		)
 	}
 }
@@ -298,6 +295,18 @@ func (h *ProfileHandler) HandleGetProfile(gctx *gin.Context) {
 	}
 
 	gctx.JSON(http.StatusCreated, data)
+}
+
+func (h *ProfileHandler) LogOut(gctx *gin.Context) {
+	token, err := gctx.Cookie("access_token")
+	if err != nil {
+		gin_gen.HandleError(gctx, global.ErrPermissionDenied)
+		return
+	}
+
+	h.removeAccessToken(gctx, token)
+
+	gctx.JSON(http.StatusOK, gin.H{"success": true})
 }
 
 func (h *ProfileHandler) setAccessToken(gctx *gin.Context, token string) {
