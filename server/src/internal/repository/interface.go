@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"learn_bot_admin_panel/internal/entity/bot_users"
 	"learn_bot_admin_panel/internal/entity/profile"
 	"learn_bot_admin_panel/internal/entity/telegram"
 	"learn_bot_admin_panel/internal/transaction"
@@ -15,6 +16,10 @@ type Profile interface {
 	CreateUserDeviceID(ts transaction.Session, userID int, deviceID string) error
 	SetProfilePassword(ts transaction.Session, userID int, password string) error
 	SetProfileTGID(ts transaction.Session, userID int, TGID int64) error
+}
+
+type BotUsers interface {
+	FindBotRegisteredUsers(ts transaction.Session, param bot_users.FindBotRegisteredUsersParam) ([]bot_users.BotUserProfile, error)
 }
 
 type TgBot interface {

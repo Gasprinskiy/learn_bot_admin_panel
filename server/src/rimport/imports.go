@@ -17,8 +17,9 @@ func NewRepositoryImports(config *config.Config, rdb *redis.Client) *RepositoryI
 	return &RepositoryImports{
 		Repository: Repository{
 			AuthCache: redis_cache.NewAuthCache(rdb, config.SSETTL),
-			Profile:   postgres.NewProfile(),
 			TgBot:     http_rep.NewTgBot(config.TgApiURL, config.BotToken),
+			Profile:   postgres.NewProfile(),
+			BotUsers:  postgres.NewBotUsers(),
 		},
 	}
 }

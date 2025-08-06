@@ -6,4 +6,5 @@ type Repository struct {
 	AuthCache repository.AuthCache
 	Profile   repository.Profile
 	TgBot     repository.TgBot
+	BotUsers  repository.BotUsers
 }

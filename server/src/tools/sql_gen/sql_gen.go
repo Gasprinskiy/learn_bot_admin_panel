@@ -25,6 +25,31 @@ func Select[T any](tx *sqlx.Tx, sqlQuery string, params ...any) ([]T, error) {
 
 	err := tx.Select(&data, sqlQuery, params...)
 
+	if err == nil && len(data) == 0 {
+		err = sql.ErrNoRows
+	}
+
+	return data, HandleError(err)
+}
+
+func SelectNamedStruct[T any, P any](tx *sqlx.Tx, sqlQuery string, params P) ([]T, error) {
+	var data []T
+
+	stmt, err := tx.PrepareNamed(sqlQuery)
+	if err != nil {
+		return nil, err
+	}
+	defer stmt.Close()
+
+	err = stmt.Select(&data, &params)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(data) == 0 {
+		err = sql.ErrNoRows
+	}
+
 	return data, HandleError(err)
 }
 
