@@ -1,6 +1,7 @@
 package postgres
 
 import (
+	"fmt"
 	"learn_bot_admin_panel/internal/entity/bot_users"
 	"learn_bot_admin_panel/internal/repository"
 	"learn_bot_admin_panel/internal/transaction"
@@ -15,14 +16,18 @@ func NewBotUsers() repository.BotUsers {
 }
 
 func (r *botUsers) FindBotRegisteredUsers(ts transaction.Session, param bot_users.FindBotRegisteredUsersInnerParam) ([]bot_users.BotUserProfile, error) {
-	var filterQuery string
+	const (
+		WhereMark      = "-- put_where"
+		FiltersMark    = "-- put_filters"
+		PaginationMark = "-- put_pagination"
+	)
 
 	sqlQuery := `
  		WITH filtered AS (
 			SELECT *
 			FROM bot_users_profile bu
-			-- put_where
-			-- filters
+			%s
+			%s
 		)
 		SELECT
 			data.u_id,
@@ -47,11 +52,15 @@ func (r *botUsers) FindBotRegisteredUsers(ts transaction.Session, param bot_user
 				bu.join_date,
 				bu.register_date
 			FROM filtered bu
-			-- pagination
+			%s
 			ORDER BY join_date DESC, u_id DESC
 			LIMIT :limit
 		) AS data
 	`
+
+	sqlQuery = fmt.Sprintf(sqlQuery, WhereMark, FiltersMark, PaginationMark)
+
+	var filterQuery string
 
 	if param.Query.Valid {
 		filterQuery += `(
@@ -73,15 +82,15 @@ func (r *botUsers) FindBotRegisteredUsers(ts transaction.Session, param bot_user
 		filterQuery += ` AND (bu.birth_date <= :birth_date_from AND bu.birth_date >= :birth_date_till)`
 	}
 
+	if filterQuery != "" {
+		sqlQuery = strings.Replace(sqlQuery, WhereMark, "WHERE ", 1)
+		sqlQuery = strings.Replace(sqlQuery, FiltersMark, filterQuery, 1)
+	}
+
 	if param.NextCursorDate.Valid && param.NextCursorID.Valid {
 		paginationQuery := `WHERE	(bu.join_date, bu.u_id) < (:next_cursor_date, :next_cursor_id)`
 
-		sqlQuery = strings.Replace(sqlQuery, "-- pagination", paginationQuery, 1)
-	}
-
-	if filterQuery != "" {
-		sqlQuery = strings.Replace(sqlQuery, "-- put_where", "WHERE", 1)
-		sqlQuery = strings.Replace(sqlQuery, "-- filters", filterQuery, 1)
+		sqlQuery = strings.Replace(sqlQuery, PaginationMark, paginationQuery, 1)
 	}
 
 	return sql_gen.SelectNamedStruct[bot_users.BotUserProfile](SqlxTx(ts), sqlQuery, param)
