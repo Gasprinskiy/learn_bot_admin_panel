@@ -108,6 +108,7 @@ func main() {
 
 	// инициализация rest handler
 	rest_api.NewProfileHandler(ui, v1Router, config, logger, middleware, sessionManager)
+	rest_api.NewBotUsersHandler(ui, v1Router, config, logger, middleware, sessionManager)
 
 	// инициализация tg bot handler
 	bot_api.NewBotProfileHandler(ui, b, config, logger, sessionManager)

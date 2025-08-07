@@ -19,7 +19,7 @@ type Profile interface {
 }
 
 type BotUsers interface {
-	FindBotRegisteredUsers(ts transaction.Session, param bot_users.FindBotRegisteredUsersParam) ([]bot_users.BotUserProfile, error)
+	FindBotRegisteredUsers(ts transaction.Session, param bot_users.FindBotRegisteredUsersInnerParam) ([]bot_users.BotUserProfile, error)
 }
 
 type TgBot interface {

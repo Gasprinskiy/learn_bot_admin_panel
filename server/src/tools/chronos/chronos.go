@@ -3,6 +3,7 @@ package chronos
 import "time"
 
 const (
+	DateISOMask = "2006-01-02T15:04:05.000Z"
 	// DateTimeMask маска с датой и временем
 	DateTimeMask = "02.01.2006 15:04:05"
 	// DateTimeWithoutSecondMask маска с датой и временем без секунд

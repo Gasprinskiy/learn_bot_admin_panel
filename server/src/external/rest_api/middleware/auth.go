@@ -1,7 +1,9 @@
 package middleware
 
 import (
+	"learn_bot_admin_panel/internal/entity/app_jwt"
 	"learn_bot_admin_panel/internal/entity/global"
+	"learn_bot_admin_panel/internal/entity/profile"
 	"learn_bot_admin_panel/internal/usecase"
 	"learn_bot_admin_panel/tools/gin_gen"
 
@@ -37,6 +39,31 @@ func (m *AuthMiddleware) CheckAccesToken() gin.HandlerFunc {
 		}
 
 		gctx.Set(UserDataKey, claims)
+		gctx.Next()
+	}
+}
+
+func (m *AuthMiddleware) CheckAccessRight(arList []profile.AccessRight) gin.HandlerFunc {
+	return func(gctx *gin.Context) {
+		jwtClaims, exists := gctx.Get(UserDataKey)
+		if !exists {
+			gin_gen.HandleError(gctx, global.ErrInternalError)
+			return
+		}
+
+		claimsData, ok := jwtClaims.(app_jwt.Claims)
+		if !ok {
+			gin_gen.HandleError(gctx, global.ErrInternalError)
+			return
+		}
+
+		has := claimsData.Access.HasAccessRightInList(arList)
+		if !has {
+			gin_gen.HandleError(gctx, global.ErrPermissionDenied)
+			gctx.Abort()
+			return
+		}
+
 		gctx.Next()
 	}
 }

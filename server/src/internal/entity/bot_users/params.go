@@ -1,11 +1,76 @@
 package bot_users
 
-import "learn_bot_admin_panel/tools/sql_null"
+import (
+	"fmt"
+	"learn_bot_admin_panel/tools/dump"
+	"learn_bot_admin_panel/tools/sql_null"
+	"strings"
+	"time"
+)
 
-type FindBotRegisteredUsersParam struct {
-	Limit          int                 `json:"limit" db:"limit"`
-	PageCount      int                 `json:"page" db:"-"`
-	Query          sql_null.NullString `json:"query" db:"query"`
-	NextCursorDate sql_null.NullTime   `json:"next_cursor_date" db:"next_cursor_date"`
-	NextCursorID   sql_null.NullInt64  `json:"next_cursor_id" db:"next_cursor_id"`
+type FindBotRegisteredUsersQuertParseParam struct {
+	Limit          int       `form:"limit"`
+	PageCount      int       `form:"page"`
+	Query          string    `form:"query"`
+	NextCursorID   int       `form:"next_cursor_id"`
+	NextCursorDate time.Time `form:"next_cursor_date"`
+	// JoinDateFrom   time.Time `form:"join_date_from"`
+	// JoinDateTill   time.Time `form:"join_date_from"`
+	AgeFrom int `form:"age_from"`
+	AgeTill int `form:"age_till"`
+}
+
+func (fp FindBotRegisteredUsersQuertParseParam) InnerParam() FindBotRegisteredUsersInnerParam {
+	fmt.Println("FP", dump.Struct(fp))
+	var (
+		query          sql_null.NullString
+		nextCursorDate sql_null.NullTime
+		nextCursorID   sql_null.NullInt64
+		birthDateFrom  sql_null.NullTime
+		birthDateTill  sql_null.NullTime
+	)
+
+	trimQuery := strings.TrimSpace(fp.Query)
+
+	if len([]rune(trimQuery)) > 0 {
+		query = sql_null.NewString(trimQuery)
+	}
+
+	if !fp.NextCursorDate.IsZero() {
+		nextCursorDate = sql_null.NewNullTime(fp.NextCursorDate)
+	}
+
+	if fp.NextCursorID > 0 {
+		nextCursorID = sql_null.NewInt64(fp.NextCursorID)
+	}
+
+	if fp.AgeFrom > 0 {
+		date := time.Now().AddDate(-fp.AgeFrom, 0, 0)
+		birthDateFrom = sql_null.NewNullTime(time.Date(date.Year(), 1, 1, 0, 0, 0, 0, time.Local))
+	}
+
+	if fp.AgeTill > 0 {
+		date := time.Now().AddDate(-fp.AgeTill, 0, 0)
+		birthDateTill = sql_null.NewNullTime(time.Date(date.Year(), 1, 1, 0, 0, 0, 0, time.Local))
+	}
+
+	return FindBotRegisteredUsersInnerParam{
+		Limit:          fp.Limit,
+		PageCount:      fp.PageCount,
+		Query:          query,
+		NextCursorDate: nextCursorDate,
+		NextCursorID:   nextCursorID,
+		BirthDateFrom:  birthDateFrom,
+		BirthDateTill:  birthDateTill,
+	}
+}
+
+type FindBotRegisteredUsersInnerParam struct {
+	Limit          int `db:"limit"`
+	PageCount      int
+	Query          sql_null.NullString `db:"query"`
+	NextCursorDate sql_null.NullTime   `db:"next_cursor_date"`
+	NextCursorID   sql_null.NullInt64  `db:"next_cursor_id"`
+	BirthDateFrom  sql_null.NullTime   `db:"birth_date_from"`
+	BirthDateTill  sql_null.NullTime   `db:"birth_date_till"`
 }

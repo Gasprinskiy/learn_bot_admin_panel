@@ -37,3 +37,13 @@ func (s AccessRight) HasInAccessRightMap() bool {
 	_, exists := AccessRightCheckMap[s]
 	return exists
 }
+
+func (s AccessRight) HasAccessRightInList(arList []AccessRight) bool {
+	arMap := make(map[AccessRight]struct{}, len(arList))
+	for _, ar := range arList {
+		arMap[ar] = struct{}{}
+	}
+
+	_, exists := arMap[s]
+	return exists
+}

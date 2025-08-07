@@ -25,8 +25,9 @@ func NewUsecaseImport(
 ) *UsecaseImport {
 	return &UsecaseImport{
 		Usecase: Usecase{
-			Jwt:     usecase.NewJwt(ri, log, conf),
-			Profile: usecase.NewProfile(ri, log, authChan, twoStepAuthChan, conf, b),
+			Jwt:      usecase.NewJwt(ri, log, conf),
+			Profile:  usecase.NewProfile(ri, log, authChan, twoStepAuthChan, conf, b),
+			BotUsers: usecase.NewBotUsers(ri, log, conf, b),
 		},
 	}
 }

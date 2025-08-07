@@ -34,7 +34,7 @@ func (u *BotUsers) logPrefix() string {
 
 func (u *BotUsers) FindRegisteredUsers(
 	ctx context.Context,
-	param bot_users.FindBotRegisteredUsersParam,
+	param bot_users.FindBotRegisteredUsersInnerParam,
 ) (global.CommotListSearchResponse[bot_users.BotUserProfile], error) {
 	var zero global.CommotListSearchResponse[bot_users.BotUserProfile]
 
@@ -51,7 +51,7 @@ func (u *BotUsers) FindRegisteredUsers(
 		return zero, global.ErrInternalError
 	}
 
-	result := global.NewCommotListSearchResponse(data, data[0].CommonTotalCount)
+	result := global.NewCommotListSearchResponse(data, data[0].CommonTotalCount, param.Limit, param.PageCount)
 
 	return result, nil
 }
