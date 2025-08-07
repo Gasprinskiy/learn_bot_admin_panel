@@ -12,7 +12,7 @@ async function findUsers() {
   try {
     const response = await $api('/bot_users', {
       params: {
-        limit: 1000,
+        limit: 100,
         page: count.value,
         query: 'Elena',
         next_cursor_date: shit.value.date,

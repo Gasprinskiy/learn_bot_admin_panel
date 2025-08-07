@@ -58,6 +58,19 @@ func (r *botUsers) FindBotRegisteredUsers(ts transaction.Session, param bot_user
 		) AS data
 	`
 
+	var filtersQueryMap = map[string]string{
+		"query:true": `(
+			bu.tg_user_name ILIKE '%' || :query || '%'
+			OR
+			bu.first_name ILIKE '%' || :query || '%'
+			OR
+			bu.last_name ILIKE '%' || :query || '%'
+  	)`,
+
+		"birth_date:true:false": ` AND bu.birth_date <= :birth_date_from`,
+		"birth_date:false:true": ` AND bu.birth_date >= :birth_date_till`,
+	}
+
 	sqlQuery = fmt.Sprintf(sqlQuery, WhereMark, FiltersMark, PaginationMark)
 
 	var filterQuery string
