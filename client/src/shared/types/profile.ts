@@ -1,3 +1,5 @@
+import type { ListResponse, PaginationParams } from './common';
+
 export enum AccessRight {
   AccessRightFull = 'full_access',
   AccessRightManager = 'manager_access',
@@ -38,3 +40,25 @@ export interface PasswordLoginResponse {
   access_right: AccessRight;
   uu_id: string;
 }
+
+export interface BotUserProfile {
+  u_id: number;
+  tg_id: number;
+  tg_user_name: string;
+  first_name: string;
+  last_name: string;
+  birth_date: string;
+  phone_number: string;
+  join_date: string;
+  register_date: string;
+}
+
+export type BotUserProfileListResponse = ListResponse<BotUserProfile>;
+
+export interface BotUserProfileQueryParam {
+  query?: string;
+  age_from?: number;
+  age_till?: number;
+}
+
+export type BotUserProfileQueryParamCommon = BotUserProfileQueryParam & PaginationParams;

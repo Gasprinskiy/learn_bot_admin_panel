@@ -15,17 +15,48 @@ func NewBotUsers() repository.BotUsers {
 	return &botUsers{}
 }
 
-func (r *botUsers) FindBotRegisteredUsers(ts transaction.Session, param bot_users.FindBotRegisteredUsersInnerParam) ([]bot_users.BotUserProfile, error) {
-	const (
-		WhereMark      = "-- put_where"
-		FiltersMark    = "-- put_filters"
-		PaginationMark = "-- put_pagination"
-	)
+const (
+	whereMark      = "-- put_where"
+	filtersMark    = "-- put_filters"
+	paginationMark = "-- put_pagination"
+)
 
+var filtersQueryMap = map[string]string{
+	bot_users.FilterKeyQuery(true): `(
+		bu.tg_user_name ILIKE '%' || :query || '%'
+		OR
+		bu.first_name ILIKE '%' || :query || '%'
+		OR
+		bu.last_name ILIKE '%' || :query || '%'
+  )`,
+	bot_users.FilterKeyBirthDate(true, false): ` bu.birth_date <= :birth_date_from`,
+	bot_users.FilterKeyBirthDate(false, true): ` bu.birth_date >= :birth_date_till`,
+	bot_users.FilterKeyBirthDate(true, true):  ` (bu.birth_date <= :birth_date_from AND bu.birth_date >= :birth_date_till)`,
+	bot_users.FilterKeyJoinDate(true, false):  ` bu.join_date >= :join_date_from`,
+	bot_users.FilterKeyJoinDate(false, true):  ` bu.join_date <= :join_date_till`,
+	bot_users.FilterKeyJoinDate(true, true):   ` (bu.join_date >= :join_date_from AND bu.join_date <= :join_date_till)`,
+	bot_users.FilterKeyPurchases(true):        ` bp.sub_id IS NOT NULL`,
+}
+
+func (r *botUsers) FindBotRegisteredUsers(ts transaction.Session, param bot_users.FindBotRegisteredUsersInnerParam) ([]bot_users.BotUserProfile, error) {
 	sqlQuery := `
  		WITH filtered AS (
-			SELECT *
+			SELECT
+				bu.u_id,
+				bu.tg_id,
+				bu.tg_user_name,
+				bu.first_name,
+				bu.last_name,
+				bu.birth_date,
+				bu.phone_number,
+				bu.join_date,
+				bu.register_date,
+				bp.sub_id,
+				bp.p_time,
+				bst.term_in_month
 			FROM bot_users_profile bu
+				LEFT JOIN bot_users_purchases bp ON (bp.u_id = bu.u_id)
+				LEFT JOIN bot_subscription_types bst ON (bst.sub_id = bp.sub_id)
 			%s
 			%s
 		)
@@ -39,18 +70,13 @@ func (r *botUsers) FindBotRegisteredUsers(ts transaction.Session, param bot_user
 			data.phone_number,
 			data.join_date,
 			data.register_date,
+			data.sub_id,
+			data.p_time,
+			data.term_in_month,
 			(SELECT COUNT(*) FROM filtered) AS total_count
 		FROM (
 			SELECT
-				bu.u_id,
-				bu.tg_id,
-				bu.tg_user_name,
-				bu.first_name,
-				bu.last_name,
-				bu.birth_date,
-				bu.phone_number,
-				bu.join_date,
-				bu.register_date
+				*
 			FROM filtered bu
 			%s
 			ORDER BY join_date DESC, u_id DESC
@@ -58,53 +84,41 @@ func (r *botUsers) FindBotRegisteredUsers(ts transaction.Session, param bot_user
 		) AS data
 	`
 
-	var filtersQueryMap = map[string]string{
-		"query:true": `(
-			bu.tg_user_name ILIKE '%' || :query || '%'
-			OR
-			bu.first_name ILIKE '%' || :query || '%'
-			OR
-			bu.last_name ILIKE '%' || :query || '%'
-  	)`,
-
-		"birth_date:true:false": ` AND bu.birth_date <= :birth_date_from`,
-		"birth_date:false:true": ` AND bu.birth_date >= :birth_date_till`,
-	}
-
-	sqlQuery = fmt.Sprintf(sqlQuery, WhereMark, FiltersMark, PaginationMark)
+	sqlQuery = fmt.Sprintf(sqlQuery, whereMark, filtersMark, paginationMark)
 
 	var filterQuery string
 
-	if param.Query.Valid {
-		filterQuery += `(
-			bu.tg_user_name ILIKE '%' || :query || '%'
-			OR
-			bu.first_name ILIKE '%' || :query || '%'
-			OR
-			bu.last_name ILIKE '%' || :query || '%'
-  	)`
+	filtersQueryKeys := [4]string{
+		bot_users.FilterKeyQuery(param.Query.Valid),
+		bot_users.FilterKeyBirthDate(param.BirthDateFrom.Valid, param.BirthDateTill.Valid),
+		bot_users.FilterKeyJoinDate(param.BirthDateFrom.Valid, param.BirthDateTill.Valid),
+		bot_users.FilterKeyPurchases(param.SubscriptionIsActive),
 	}
 
-	if param.BirthDateFrom.Valid && !param.BirthDateTill.Valid {
-		filterQuery += ` AND bu.birth_date <= :birth_date_from`
-	} else {
-		filterQuery += ` AND bu.birth_date >= :birth_date_till`
-	}
+	for i, key := range filtersQueryKeys {
+		query, exists := filtersQueryMap[key]
+		if !exists {
+			continue
+		}
 
-	if param.BirthDateFrom.Valid && param.BirthDateTill.Valid {
-		filterQuery += ` AND (bu.birth_date <= :birth_date_from AND bu.birth_date >= :birth_date_till)`
+		filterQuery += query
+		if i > 0 && (i+1 < len(filtersQueryKeys)) {
+			filterQuery += " AND"
+		}
 	}
 
 	if filterQuery != "" {
-		sqlQuery = strings.Replace(sqlQuery, WhereMark, "WHERE ", 1)
-		sqlQuery = strings.Replace(sqlQuery, FiltersMark, filterQuery, 1)
+		sqlQuery = strings.Replace(sqlQuery, whereMark, "WHERE ", 1)
+		sqlQuery = strings.Replace(sqlQuery, filtersMark, filterQuery, 1)
 	}
 
 	if param.NextCursorDate.Valid && param.NextCursorID.Valid {
 		paginationQuery := `WHERE	(bu.join_date, bu.u_id) < (:next_cursor_date, :next_cursor_id)`
 
-		sqlQuery = strings.Replace(sqlQuery, PaginationMark, paginationQuery, 1)
+		sqlQuery = strings.Replace(sqlQuery, paginationMark, paginationQuery, 1)
 	}
+
+	fmt.Println("sqlQuery: ", sqlQuery)
 
 	return sql_gen.SelectNamedStruct[bot_users.BotUserProfile](SqlxTx(ts), sqlQuery, param)
 }

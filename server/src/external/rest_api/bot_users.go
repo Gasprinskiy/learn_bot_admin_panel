@@ -2,14 +2,12 @@ package rest_api
 
 import (
 	"context"
-	"fmt"
 	"learn_bot_admin_panel/config"
 	"learn_bot_admin_panel/external/rest_api/middleware"
 	"learn_bot_admin_panel/internal/entity/bot_users"
 	"learn_bot_admin_panel/internal/entity/global"
 	"learn_bot_admin_panel/internal/entity/profile"
 	"learn_bot_admin_panel/internal/transaction"
-	"learn_bot_admin_panel/tools/dump"
 	"learn_bot_admin_panel/tools/gin_gen"
 	"learn_bot_admin_panel/tools/logger"
 	"learn_bot_admin_panel/uimport"
@@ -64,16 +62,12 @@ func (h *BotUsersHandler) GetBotUsers(gctx *gin.Context) {
 		return
 	}
 
-	innerParam := param.InnerParam()
-
-	fmt.Println("innerParam: ", dump.Struct(innerParam))
-
 	data, err := transaction.RunInTx(
 		gctx,
 		h.log,
 		h.sm,
 		func(ctx context.Context) (global.CommotListSearchResponse[bot_users.BotUserProfile], error) {
-			return h.ui.Usecase.BotUsers.FindRegisteredUsers(ctx, innerParam)
+			return h.ui.Usecase.BotUsers.FindRegisteredUsers(ctx, param.InnerParam())
 		},
 	)
 

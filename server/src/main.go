@@ -87,6 +87,10 @@ func main() {
 	router := gin.Default()
 	router.Use(cors.New(ginConfig))
 
+	router.OPTIONS("/*path", func(c *gin.Context) {
+		c.AbortWithStatus(204)
+	})
+
 	v1Router := router.Group("/api/v1")
 	v1Router.Use(cors.New(ginConfig))
 	srv := &http.Server{
