@@ -18,7 +18,7 @@ const teacherTasksRoute: ProtectedRoute = {
 
 const usersListRoute: ProtectedRoute = {
   name: 'users_list',
-  path: '/users_list',
+  path: '/users_list/registered',
   icon: SupervisedUserCircleRound,
   text: 'Пользователи',
 };
@@ -31,7 +31,7 @@ const videoContentRoute: ProtectedRoute = {
 };
 
 export const RoutesByAccessRight: Record<AccessRight, Array<ProtectedRoute>> = {
-  [AccessRight.AccessRightFull]: [createProfileRoute, teacherTasksRoute, usersListRoute, videoContentRoute],
-  [AccessRight.AccessRightManager]: [usersListRoute, teacherTasksRoute, videoContentRoute],
-  [AccessRight.AccessRightTeacher]: [teacherTasksRoute, videoContentRoute],
+  [AccessRight.AccessRightFull]: [createProfileRoute, usersListRoute, videoContentRoute, teacherTasksRoute],
+  [AccessRight.AccessRightManager]: [usersListRoute, videoContentRoute, teacherTasksRoute],
+  [AccessRight.AccessRightTeacher]: [videoContentRoute, teacherTasksRoute],
 };

@@ -22,7 +22,7 @@ const (
 )
 
 var filtersQueryMap = map[string]string{
-	bot_users.FilterKeyQuery(true): `(
+	bot_users.FilterKeyQuery(true): ` (
 		bu.tg_user_name ILIKE '%' || :query || '%'
 		OR
 		bu.first_name ILIKE '%' || :query || '%'
@@ -35,7 +35,13 @@ var filtersQueryMap = map[string]string{
 	bot_users.FilterKeyJoinDate(true, false):  ` bu.join_date >= :join_date_from`,
 	bot_users.FilterKeyJoinDate(false, true):  ` bu.join_date <= :join_date_till`,
 	bot_users.FilterKeyJoinDate(true, true):   ` (bu.join_date >= :join_date_from AND bu.join_date <= :join_date_till)`,
-	bot_users.FilterKeyPurchases(true):        ` bp.sub_id IS NOT NULL`,
+	bot_users.FilterKeySubscriptionStatus(true, bot_users.SubscriptionStatusActive): ` (
+		DATE_TRUNC('day', CURRENT_TIMESTAMP) < DATE_TRUNC('day', bp.p_time + make_interval(months := bst.term_in_month))
+	)`,
+	bot_users.FilterKeySubscriptionStatus(true, bot_users.SubscriptionStatusNotExists): ` bp.sub_id IS NULL`,
+	bot_users.FilterKeySubscriptionStatus(true, bot_users.SubscriptionStatusExpired): ` (
+		DATE_TRUNC('day', CURRENT_TIMESTAMP) >= DATE_TRUNC('day', bp.p_time + make_interval(months := bst.term_in_month))
+	)`,
 }
 
 func (r *botUsers) FindBotRegisteredUsers(ts transaction.Session, param bot_users.FindBotRegisteredUsersInnerParam) ([]bot_users.BotUserProfile, error) {
@@ -76,8 +82,19 @@ func (r *botUsers) FindBotRegisteredUsers(ts transaction.Session, param bot_user
 			(SELECT COUNT(*) FROM filtered) AS total_count
 		FROM (
 			SELECT
-				*
-			FROM filtered bu
+				f.u_id,
+				f.tg_id,
+				f.tg_user_name,
+				f.first_name,
+				f.last_name,
+				f.birth_date,
+				f.phone_number,
+				f.join_date,
+				f.register_date,
+				f.sub_id,
+				f.p_time,
+				f.term_in_month
+			FROM filtered f
 			%s
 			ORDER BY join_date DESC, u_id DESC
 			LIMIT :limit
@@ -91,20 +108,29 @@ func (r *botUsers) FindBotRegisteredUsers(ts transaction.Session, param bot_user
 	filtersQueryKeys := [4]string{
 		bot_users.FilterKeyQuery(param.Query.Valid),
 		bot_users.FilterKeyBirthDate(param.BirthDateFrom.Valid, param.BirthDateTill.Valid),
-		bot_users.FilterKeyJoinDate(param.BirthDateFrom.Valid, param.BirthDateTill.Valid),
-		bot_users.FilterKeyPurchases(param.SubscriptionIsActive),
+		bot_users.FilterKeyJoinDate(param.JoinDateFrom.Valid, param.JoinDateTill.Valid),
+		bot_users.FilterKeySubscriptionStatus(param.SubscriptionStatus.Valid, param.SubscriptionStatus.Value),
 	}
 
-	for i, key := range filtersQueryKeys {
+	existsFilters := make([]string, 0, len(filtersQueryKeys))
+
+	for _, key := range filtersQueryKeys {
 		query, exists := filtersQueryMap[key]
 		if !exists {
 			continue
 		}
 
-		filterQuery += query
-		if i > 0 && (i+1 < len(filtersQueryKeys)) {
-			filterQuery += " AND"
+		existsFilters = append(existsFilters, query)
+	}
+
+	for i, filter := range existsFilters {
+		filterQuery += filter
+
+		if i == len(existsFilters)-1 {
+			continue
 		}
+
+		filterQuery += " AND"
 	}
 
 	if filterQuery != "" {
@@ -113,12 +139,10 @@ func (r *botUsers) FindBotRegisteredUsers(ts transaction.Session, param bot_user
 	}
 
 	if param.NextCursorDate.Valid && param.NextCursorID.Valid {
-		paginationQuery := `WHERE	(bu.join_date, bu.u_id) < (:next_cursor_date, :next_cursor_id)`
+		paginationQuery := `WHERE	(f.join_date, f.u_id) < (:next_cursor_date, :next_cursor_id)`
 
 		sqlQuery = strings.Replace(sqlQuery, paginationMark, paginationQuery, 1)
 	}
-
-	fmt.Println("sqlQuery: ", sqlQuery)
 
 	return sql_gen.SelectNamedStruct[bot_users.BotUserProfile](SqlxTx(ts), sqlQuery, param)
 }

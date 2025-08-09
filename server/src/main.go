@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"learn_bot_admin_panel/config"
 	"learn_bot_admin_panel/external/bot_api"
 	"learn_bot_admin_panel/external/rest_api"
@@ -88,6 +89,7 @@ func main() {
 	router.Use(cors.New(ginConfig))
 
 	router.OPTIONS("/*path", func(c *gin.Context) {
+		fmt.Println("TIME LC: ", time.Local)
 		c.AbortWithStatus(204)
 	})
 

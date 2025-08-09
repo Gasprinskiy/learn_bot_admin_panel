@@ -17,7 +17,7 @@ func (r *profileRepo) CreateProfile(ts transaction.Session, param profile.Create
 	return 1, nil
 }
 
-func (r *profileRepo) FindProfileByTGUserName(ts transaction.Session, userName string) (profile.User, error) {
+func (r *profileRepo) FindProfileByTGUserNameOrID(ts transaction.Session, userName string, TGID int64) (profile.User, error) {
 	sqlQuery := `
 		SELECT
 			u.u_id,
@@ -30,9 +30,10 @@ func (r *profileRepo) FindProfileByTGUserName(ts transaction.Session, userName s
 		FROM admin_panel_users u
     	JOIN admin_panel_acces_rights ar ON (ar.ar_id = u.ar_id)
 		WHERE u.tg_user_name = $1
+		OR u.tg_id = $2
 	`
 
-	return sql_gen.Get[profile.User](SqlxTx(ts), sqlQuery, userName)
+	return sql_gen.Get[profile.User](SqlxTx(ts), sqlQuery, userName, TGID)
 }
 
 func (r *profileRepo) FindProfileByID(ts transaction.Session, userID int) (profile.User, error) {

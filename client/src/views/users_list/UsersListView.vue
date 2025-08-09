@@ -1,42 +1,52 @@
 <script setup lang="ts">
-import $api from '@/packages/api/client';
-import type { PaginationParams } from '@/shared/types/common';
-import type { BotUserProfileQueryParam, BotUserProfileListResponse } from '@/shared/types/profile';
-import { shallowReactive, shallowRef } from 'vue';
+import { NDivider, NTabPane, NTabs } from 'naive-ui';
+import { computed } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 
-const searchParams = shallowReactive<BotUserProfileQueryParam>({});
-const pagidationParams = shallowReactive<PaginationParams>({
-  limit: 100,
-  page: 1,
-});
-const count = shallowRef<number>(1);
+import { UserListTab } from './types';
 
-async function findUsers() {
-  try {
-    const response = await $api<BotUserProfileListResponse>('/bot_users', {
-      params: {
-        ...searchParams,
-        ...pagidationParams,
-      },
+const route = useRoute();
+const router = useRouter();
+
+const currentTab = computed<UserListTab>({
+  get(): UserListTab {
+    const param = route.matched[1].name as UserListTab;
+    return param;
+  },
+
+  async set(value: UserListTab) {
+    await router.push({
+      name: value,
     });
-    pagidationParams.next_cursor_date = response.data[response.data.length - 1].join_date;
-    pagidationParams.next_cursor_id = response.data[response.data.length - 1].u_id;
-    count.value += 1;
-  } catch (e) {
-    console.error(e);
-  }
-}
+  },
+
+});
+
+
 </script>
 
 <template>
-  <div>
-    USERS
-    <button @click="findUsers">
-      FIND
-    </button>
+  <div class="users-list-view">
+    <h2 class="users-list-view__head">
+      Пользователи бота
+    </h2>
+
+    <div class="users-list-view__tabs">
+      <NTabs
+        v-model:value="currentTab"
+        type="segment"
+      >
+        <NTabPane tab="Зарегистрированные" :name="UserListTab.REGISTERED" />
+        <NTabPane tab="Не зарегистрированные" :name="UserListTab.UNREGISTERED" />
+      </NTabs>
+    </div>
+
+    <NDivider class="users-list-view__divider" />
+
+    <div class="users-list-view__body">
+      <RouterView />
+    </div>
   </div>
 </template>
 
-<style scoped>
-
-</style>
+<style lang="scss" src="./style.scss" />

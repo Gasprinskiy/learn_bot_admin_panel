@@ -1,0 +1,70 @@
+.registered-users-view {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  &__filters {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    width: 100%;
+  }
+
+  &__filters_fileds {
+    display: flex;
+    gap: 10px;
+    width: calc(90% - 10px);
+    flex-wrap: wrap;
+  }
+
+  &__filters_search-input {
+    width: 16%;
+    flex-grow: 1;
+    min-width: 260px;
+    // max-width: 270px;
+  }
+
+  &__filters_sub-select {
+    width: 10%;
+    min-width: 100px;
+    flex-grow: 1;
+  }
+
+  &__filters_join-date-range {
+    display: flex;
+    gap: 2px;
+    width: 27%;
+    align-items: center;
+    min-width: 370px;
+    flex-grow: 1;
+
+    .n-date-picker {
+      min-width: 190px !important;
+      flex-grow: 1;
+      width: 50% !important;
+    }
+  }
+
+  &__filters_age-range {
+    display: flex;
+    gap: 2px;
+    flex-grow: 1;
+
+    .n-input-number {
+      width: 50%;
+    }
+  }
+
+  &__filters-buttons {
+    width: 10%;
+    display: flex;
+    gap: 5px;
+  }
+
+  &__list_bottom {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    padding: 15px 0;
+  }
+}

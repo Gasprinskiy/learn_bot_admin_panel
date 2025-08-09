@@ -117,7 +117,7 @@ func (u *Profile) TgAuthVerifyAnswer(ctx context.Context, userName, tempID strin
 
 	ts := transaction.MustGetSession(ctx)
 
-	user, err := u.ri.Repository.Profile.FindProfileByTGUserName(ts, userName)
+	user, err := u.ri.Repository.Profile.FindProfileByTGUserNameOrID(ts, userName, TGID)
 	switch err {
 	case nil:
 	case global.ErrNoData:
@@ -225,7 +225,7 @@ func (u *Profile) OnPasswordLogin(ctx context.Context, param profile.PasswordLog
 
 	ts := transaction.MustGetSession(ctx)
 
-	userInfo, err := u.ri.Repository.Profile.FindProfileByTGUserName(ts, param.UserName)
+	userInfo, err := u.ri.Repository.Profile.FindProfileByTGUserNameOrID(ts, param.UserName, 0)
 	switch err {
 	case nil:
 	case global.ErrNoData:

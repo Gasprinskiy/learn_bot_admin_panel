@@ -1,27 +1,25 @@
 <script setup lang="ts">
-import { NDivider, NScrollbar, useLoadingBar, useMessage } from 'naive-ui';
+import { NDivider, NScrollbar, useLoadingBar } from 'naive-ui';
 import { useApiRequestEventBus } from '@/composables/use_api_requests_event_bus';
 import { onMounted, shallowRef } from 'vue';
 import { useRouter } from 'vue-router';
 
 import { useAuth } from './composables/use_auth';
 import AppHeader from './components/header/AppHeader.vue';
-import type { UseApiRequestEventBusEvents } from './composables/use_api_requests_event_bus/types';
 import ModalProvider from './components/modal-provider/ModalProvider.vue';
 import { useModal } from './composables/use_modal';
 
 const router = useRouter();
 const loadingBar = useLoadingBar();
 const apiEventBus = useApiRequestEventBus();
-const message = useMessage();
 const { isVisible } = useModal();
 const { checkAuthOnRouteChange } = useAuth();
 
 const isBlocked = shallowRef<boolean>(false);
 
 onMounted(() => {
-  apiEventBus.subscribe('on_request', (arg: UseApiRequestEventBusEvents['on_request']) => {
-    isBlocked.value = arg.is_blocking || false;
+  apiEventBus.subscribe('on_request', () => {
+    isBlocked.value = true;
     loadingBar.start();
   });
 
@@ -30,12 +28,9 @@ onMounted(() => {
     loadingBar.finish();
   });
 
-  apiEventBus.subscribe('on_error', (arg: UseApiRequestEventBusEvents['on_error']) => {
+  apiEventBus.subscribe('on_error', () => {
     isBlocked.value = false;
     loadingBar.error();
-    if (arg && arg.message) {
-      message.error(arg.message, { duration: 3000 });
-    }
   });
 });
 
@@ -52,7 +47,10 @@ router.beforeEach(checkAuthOnRouteChange);
     <AppHeader />
     <NDivider class="app-wrapper__divider" />
     <div class="app-wrapper__scrollbar-container">
-      <NScrollbar class="app-wrapper__scrollbar">
+      <NScrollbar
+        class="app-wrapper__scrollbar"
+        style="max-height: calc(100vh - 57px);"
+      >
         <RouterView />
       </NScrollbar>
     </div>
@@ -77,10 +75,10 @@ router.beforeEach(checkAuthOnRouteChange);
   }
 
   &__scrollbar {
-    height: calc(100vh - 57px);
-    padding: 16px;
+    // height: calc(100vh - 57px);
 
     .n-scrollbar-content {
+      padding: 16px;
       height: 100%;
     }
   }

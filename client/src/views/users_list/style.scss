@@ -1,0 +1,9 @@
+.users-list-view {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  &__divider {
+    margin: 0 !important;
+  }
+}

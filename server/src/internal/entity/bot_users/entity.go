@@ -18,5 +18,11 @@ type BotUserProfile struct {
 	CommonTotalCount   int                `db:"total_count" json:"-"`
 	SubscrID           sql_null.NullInt64 `db:"sub_id" json:"subscription_id"`
 	SubscrPurchaseDate sql_null.NullTime  `db:"p_time" json:"-"`
-	SubscrTerm         sql_null.NullTime  `db:"term_in_month" json:"subscription_term"`
+	SubscrTerm         sql_null.NullInt64 `db:"term_in_month" json:"subscription_term"`
+	//
+	SubscrStatus SubscriptionStatus `json:"subscription_status"`
+}
+
+func (b *BotUserProfile) SetSubscriptionStatus(value SubscriptionStatus) {
+	b.SubscrStatus = value
 }

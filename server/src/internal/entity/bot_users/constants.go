@@ -4,11 +4,19 @@ import (
 	"fmt"
 )
 
+type SubscriptionStatus string
+
 const (
-	FilterKeyQueryPrefix     = "query"
-	FilterKeyJoinDatePrefix  = "join_date"
-	FilterKeyBirthDatePrefix = "birth_date"
-	FilterKeyPurchasesPrefix = "purchases"
+	SubscriptionStatusActive    SubscriptionStatus = "active"
+	SubscriptionStatusExpired   SubscriptionStatus = "expired"
+	SubscriptionStatusNotExists SubscriptionStatus = "not_exists"
+)
+
+const (
+	FilterKeyQueryPrefix              = "query"
+	FilterKeyJoinDatePrefix           = "join_date"
+	FilterKeyBirthDatePrefix          = "birth_date"
+	FilterKeySubscriptionStatusPrefix = "purchases"
 )
 
 func rangeKey(prefix string, fromValid, tillValid bool) string {
@@ -29,10 +37,10 @@ var (
 	}
 
 	FilterKeyJoinDate = func(fromValid, tillValid bool) string {
-		return rangeKey(FilterKeyBirthDatePrefix, fromValid, tillValid)
+		return rangeKey(FilterKeyJoinDatePrefix, fromValid, tillValid)
 	}
 
-	FilterKeyPurchases = func(valid bool) string {
-		return validKey(FilterKeyPurchasesPrefix, valid)
+	FilterKeySubscriptionStatus = func(valid bool, status SubscriptionStatus) string {
+		return fmt.Sprintf("%s:%t:%s", FilterKeySubscriptionStatusPrefix, valid, status)
 	}
 )

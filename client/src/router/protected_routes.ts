@@ -1,5 +1,6 @@
 import type { RouteRecordRaw } from 'vue-router';
 import { AccessRight } from '@/shared/types/profile';
+import { UserListTab } from '@/views/users_list/types';
 
 //
 type RoutesByAccessRight = {
@@ -66,6 +67,22 @@ const usersListRoute: ReadonlyRecordRaw = {
   component: () => {
     return import('@/views/users_list/UsersListView.vue');
   },
+  children: [
+    {
+      path: 'registered',
+      name: UserListTab.REGISTERED,
+      component: () => {
+        return import('@/views/users_list/children/registered/RegisteredUsersView.vue');
+      },
+    },
+    {
+      path: 'un_registered',
+      name: UserListTab.UNREGISTERED,
+      component: () => {
+        return import('@/views/users_list/children/unregistered/UnregisteredUsersView.vue');
+      },
+    },
+  ],
 };
 
 const videoContentRoute: ReadonlyRecordRaw = {

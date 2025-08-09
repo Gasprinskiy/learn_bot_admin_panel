@@ -4,7 +4,7 @@ import { computed } from 'vue';
 import { Theme } from './types';
 import { ThemeMap } from './constants';
 
-const theme = useStorage<Theme>('theme', Theme.LIGHT);
+const theme = useStorage<Theme>('theme', Theme.DARK);
 
 export function useAppTheme() {
   const currentTheme = computed<BuiltInGlobalTheme>(() => ThemeMap[theme.value]);

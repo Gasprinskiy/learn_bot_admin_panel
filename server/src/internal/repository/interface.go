@@ -10,7 +10,7 @@ import (
 
 type Profile interface {
 	CreateProfile(ts transaction.Session, param profile.CreateProfileParam) (int, error)
-	FindProfileByTGUserName(ts transaction.Session, userName string) (profile.User, error)
+	FindProfileByTGUserNameOrID(ts transaction.Session, userName string, TGID int64) (profile.User, error)
 	FindProfileByID(ts transaction.Session, userID int) (profile.User, error)
 	FindUserDeviceIDList(ts transaction.Session, userID int) ([]string, error)
 	CreateUserDeviceID(ts transaction.Session, userID int, deviceID string) error

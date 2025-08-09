@@ -7,6 +7,7 @@ import (
 	"learn_bot_admin_panel/internal/entity/global"
 	"learn_bot_admin_panel/internal/transaction"
 	"learn_bot_admin_panel/rimport"
+	"learn_bot_admin_panel/tools/chronos"
 	"learn_bot_admin_panel/tools/logger"
 
 	"github.com/go-telegram/bot"
@@ -52,6 +53,25 @@ func (u *BotUsers) FindRegisteredUsers(
 	}
 
 	result := global.NewCommotListSearchResponse(data, data[0].CommonTotalCount, param.Limit, param.PageCount)
+
+	now := chronos.BeginingOfNow()
+
+	for i, user := range result.Data {
+		if user.SubscrPurchaseDate.Valid {
+			subDate := chronos.BeginingOfDate(user.SubscrPurchaseDate.Time)
+			expireDate := subDate.AddDate(0, user.SubscrTerm.GetInt(), 0)
+
+			if now.After(expireDate) {
+				user.SetSubscriptionStatus(bot_users.SubscriptionStatusExpired)
+			} else {
+				user.SetSubscriptionStatus(bot_users.SubscriptionStatusActive)
+			}
+		} else {
+			user.SetSubscriptionStatus(bot_users.SubscriptionStatusNotExists)
+		}
+
+		result.Data[i] = user
+	}
 
 	return result, nil
 }
