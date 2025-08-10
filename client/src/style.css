@@ -18,7 +18,6 @@ body.performance *::after {
   filter: none !important;
   backdrop-filter: none !important;
   background-image: none !important;
-  overflow: hidden;
 }
 
 html {

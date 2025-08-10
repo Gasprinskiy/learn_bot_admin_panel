@@ -1,6 +1,6 @@
 import type { RouteRecordRaw } from 'vue-router';
 import { AccessRight } from '@/shared/types/profile';
-import { UserListTab } from '@/views/users_list/types';
+import { UserListTab } from '@/views/bot_users/types';
 
 //
 type RoutesByAccessRight = {
@@ -55,8 +55,8 @@ const teacherTasksRoute: ReadonlyRecordRaw = {
 };
 
 const usersListRoute: ReadonlyRecordRaw = {
-  name: 'users_list',
-  path: '/users_list',
+  name: 'bot_users',
+  path: '/bot_users',
   meta: {
     relatedToAccessRights: true,
     accessRights: {
@@ -65,21 +65,21 @@ const usersListRoute: ReadonlyRecordRaw = {
     },
   },
   component: () => {
-    return import('@/views/users_list/UsersListView.vue');
+    return import('@/views/bot_users/UsersListView.vue');
   },
   children: [
     {
       path: 'registered',
       name: UserListTab.REGISTERED,
       component: () => {
-        return import('@/views/users_list/children/registered/RegisteredUsersView.vue');
+        return import('@/views/bot_users/children/registered/RegisteredUsersView.vue');
       },
     },
     {
       path: 'un_registered',
       name: UserListTab.UNREGISTERED,
       component: () => {
-        return import('@/views/users_list/children/unregistered/UnregisteredUsersView.vue');
+        return import('@/views/bot_users/children/unregistered/UnregisteredUsersView.vue');
       },
     },
   ],

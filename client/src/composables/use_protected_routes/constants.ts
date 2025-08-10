@@ -17,8 +17,8 @@ const teacherTasksRoute: ProtectedRoute = {
 };
 
 const usersListRoute: ProtectedRoute = {
-  name: 'users_list',
-  path: '/users_list/registered',
+  name: 'bot_users',
+  path: '/bot_users/registered',
   icon: SupervisedUserCircleRound,
   text: 'Пользователи',
 };
