@@ -92,6 +92,26 @@ func main() {
 		fmt.Println("TIME LC: ", time.Local)
 		c.AbortWithStatus(204)
 	})
+	// router.RemoveExtraSlash = true
+
+	// wd, err := os.Getwd()
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	// fmt.Println("wd: ", wd)
+
+	// // Если uploads находится на уровень выше
+	// uploadsPath := filepath.Join(wd, "../", "uploads")
+
+	// // Преобразуем в абсолютный путь
+	// uploadsAbsPath, err := filepath.Abs(uploadsPath)
+	// fmt.Println("uploadsAbsPath: ", uploadsAbsPath)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	router.Static("/uploads", "./uploads")
 
 	v1Router := router.Group("/api/v1")
 	v1Router.Use(cors.New(ginConfig))

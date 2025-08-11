@@ -15,5 +15,6 @@ RUN apk add --no-cache tzdata
 ENV TZ=Asia/Tashkent
 
 COPY --from=builder /app/main .
+COPY ./uploads ./uploads
 
 CMD ["./main"]
