@@ -19,6 +19,7 @@ const (
 	whereMark      = "-- put_where"
 	filtersMark    = "-- put_filters"
 	paginationMark = "-- put_pagination"
+	limitMark      = "-- limit"
 )
 
 var filtersQueryMap = map[string]string{
@@ -97,11 +98,11 @@ func (r *botUsers) FindBotRegisteredUsers(ts transaction.Session, param bot_user
 			FROM filtered f
 			%s
 			ORDER BY join_date DESC, u_id DESC
-			LIMIT :limit
+			%s
 		) AS data
 	`
 
-	sqlQuery = fmt.Sprintf(sqlQuery, whereMark, filtersMark, paginationMark)
+	sqlQuery = fmt.Sprintf(sqlQuery, whereMark, filtersMark, paginationMark, limitMark)
 
 	var filterQuery string
 
@@ -142,6 +143,10 @@ func (r *botUsers) FindBotRegisteredUsers(ts transaction.Session, param bot_user
 		paginationQuery := `WHERE	(f.join_date, f.u_id) < (:next_cursor_date, :next_cursor_id)`
 
 		sqlQuery = strings.Replace(sqlQuery, paginationMark, paginationQuery, 1)
+	}
+
+	if param.Limit > 0 {
+		sqlQuery = strings.Replace(sqlQuery, limitMark, "LIMIT :limit", 1)
 	}
 
 	return sql_gen.SelectNamedStruct[bot_users.BotUserProfile](SqlxTx(ts), sqlQuery, param)

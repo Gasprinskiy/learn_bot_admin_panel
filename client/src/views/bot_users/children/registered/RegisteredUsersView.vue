@@ -1,15 +1,13 @@
 <script setup lang="ts">
 import { NButton, NDatePicker, NIcon, NInput, NInputNumber, NSelect, NTable, NTag, NTooltip } from 'naive-ui';
-import type { SelectMixedOption } from 'naive-ui/es/select/src/interface';
 import { RefreshOutlined, SearchOutlined } from '@vicons/material';
-import { computed, h, onBeforeMount } from 'vue';
-import type { VNodeChild } from 'vue';
+import { DocumentTextOutline } from '@vicons/ionicons5';
+import { computed, onBeforeMount } from 'vue';
 
 import type { SubscriptionStatus } from '@/shared/types/profile';
 
 import { SubscriptionStatusSelectOptions, SubscriptionStatusTitleMap, SubscriptionUIStatus } from './constants';
 import { useUsersList } from '../../composables/use_users_list';
-import { DocumentTextOutline } from '@vicons/ionicons5';
 
 const {
   data,
@@ -20,6 +18,7 @@ const {
   fetchRegisteredUsers,
   loadMoreRegisteredUsers,
   resetSearchParams,
+  printRegisteredUsers,
 } = useUsersList();
 
 const searchQuery = computed<string>({
@@ -118,15 +117,6 @@ async function onReset() {
   await fetchRegisteredUsers();
 }
 
-function renderSelectLabel(option: SelectMixedOption): VNodeChild {
-  const status = option.value as SubscriptionStatus;
-  // @ts-expect-error freakint description
-  return h(NTag, {
-    type: SubscriptionUIStatus[status],
-    bordered: false,
-  }, option.label);
-}
-
 onBeforeMount(fetchRegisteredUsers);
 </script>
 
@@ -151,7 +141,6 @@ onBeforeMount(fetchRegisteredUsers);
             v-model:value="subStatus"
             :options="SubscriptionStatusSelectOptions"
             placeholder="Статус подписки"
-            :render-label="renderSelectLabel"
           />
         </div>
 
@@ -226,6 +215,7 @@ onBeforeMount(fetchRegisteredUsers);
           <template #trigger>
             <NButton
               type="info"
+              @click="printRegisteredUsers"
             >
               <template #icon>
                 <NIcon

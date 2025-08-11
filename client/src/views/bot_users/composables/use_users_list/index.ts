@@ -69,6 +69,40 @@ export function useUsersList() {
     }
   }
 
+  function _downloadBlob(file: Blob, fileName: string): void {
+    const a = document.createElement('a');
+    const url = window.URL.createObjectURL(file);
+    document.body.appendChild(a);
+
+    a.href = url;
+    a.download = fileName;
+
+    const clickEvent = new MouseEvent('click', {
+      bubbles: true,
+      cancelable: true,
+      view: window,
+    });
+    a.dispatchEvent(clickEvent);
+
+    a.remove();
+    window.URL.revokeObjectURL(url);
+  }
+
+  async function printRegisteredUsers() {
+    try {
+      const response = await $api<Blob>('/bot_users/excel_file', {
+        params: {
+          ...searchParams,
+        },
+      });
+
+      _downloadBlob(response, 'bot_users.xlsx');
+    } catch (e) {
+      const stauts = +(e as any).status || 500;
+      message.error(ErrorMessagesByCode[stauts]);
+    }
+  }
+
   async function loadMoreRegisteredUsers() {
     if (isLoadingMore.value) {
       return;
@@ -96,5 +130,6 @@ export function useUsersList() {
     fetchRegisteredUsers,
     loadMoreRegisteredUsers,
     resetSearchParams,
+    printRegisteredUsers,
   };
 }
