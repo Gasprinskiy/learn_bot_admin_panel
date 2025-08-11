@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"learn_bot_admin_panel/config"
 	"learn_bot_admin_panel/external/bot_api"
 	"learn_bot_admin_panel/external/rest_api"
@@ -89,7 +88,6 @@ func main() {
 	router.Use(cors.New(ginConfig))
 
 	router.OPTIONS("/*path", func(c *gin.Context) {
-		fmt.Println("TIME LC: ", time.Local)
 		c.AbortWithStatus(204)
 	})
 
@@ -104,12 +102,11 @@ func main() {
 
 	// инициализация event bus авторизация
 	authChan := chanel_bus.NewBusChanel[profile.User]()
-	twoStepAuthChan := chanel_bus.NewBusChanel[profile.PasswordLoginResponse]()
 	// инициализация репо
 	ri := rimport.NewRepositoryImports(config, rdb)
 
 	// инициализация usecase
-	ui := uimport.NewUsecaseImport(ri, logger, authChan, twoStepAuthChan, config, b)
+	ui := uimport.NewUsecaseImport(ri, logger, authChan, config, b)
 
 	//
 	middleware := middleware.NewAuthMiddleware(ui.Jwt)

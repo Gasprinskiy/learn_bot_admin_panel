@@ -19,14 +19,13 @@ func NewUsecaseImport(
 	ri *rimport.RepositoryImports,
 	log *logger.Logger,
 	authChan *chanel_bus.BusChanel[profile.User],
-	twoStepAuthChan *chanel_bus.BusChanel[profile.PasswordLoginResponse],
 	conf *config.Config,
 	b *bot.Bot,
 ) *UsecaseImport {
 	return &UsecaseImport{
 		Usecase: Usecase{
 			Jwt:      usecase.NewJwt(ri, log, conf),
-			Profile:  usecase.NewProfile(ri, log, authChan, twoStepAuthChan, conf, b),
+			Profile:  usecase.NewProfile(ri, log, authChan, conf, b),
 			BotUsers: usecase.NewBotUsers(ri, log, conf, b),
 		},
 	}

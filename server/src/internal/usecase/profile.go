@@ -24,23 +24,21 @@ import (
 )
 
 type Profile struct {
-	ri              *rimport.RepositoryImports
-	log             *logger.Logger
-	authChan        *chanel_bus.BusChanel[profile.User]
-	twoStepAuthChan *chanel_bus.BusChanel[profile.PasswordLoginResponse]
-	config          *config.Config
-	b               *bot.Bot
+	ri       *rimport.RepositoryImports
+	log      *logger.Logger
+	authChan *chanel_bus.BusChanel[profile.User]
+	config   *config.Config
+	b        *bot.Bot
 }
 
 func NewProfile(
 	ri *rimport.RepositoryImports,
 	log *logger.Logger,
 	authChan *chanel_bus.BusChanel[profile.User],
-	twoStepAuthChan *chanel_bus.BusChanel[profile.PasswordLoginResponse],
 	config *config.Config,
 	b *bot.Bot,
 ) *Profile {
-	return &Profile{ri, log, authChan, twoStepAuthChan, config, b}
+	return &Profile{ri, log, authChan, config, b}
 }
 
 func (u *Profile) logPrefix() string {
