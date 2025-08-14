@@ -8,6 +8,7 @@ import type { SubscriptionStatus } from '@/shared/types/profile';
 
 import { SubscriptionStatusSelectOptions, SubscriptionStatusTitleMap, SubscriptionUIStatus } from './constants';
 import { useUsersList } from '../../composables/use_users_list';
+import router from '@/router';
 
 const {
   data,
@@ -114,7 +115,16 @@ function dateToRuLocaleString(date: string): string {
 
 async function onReset() {
   resetSearchParams();
-  await fetchRegisteredUsers();
+  await fetchRegisteredUsers(true);
+}
+
+async function navigateToUser(id: number) {
+  await router.push({
+    name: 'registered-user',
+    params: {
+      id,
+    },
+  });
 }
 
 onBeforeMount(fetchRegisteredUsers);
@@ -132,7 +142,7 @@ onBeforeMount(fetchRegisteredUsers);
         >
           <NInput
             v-model:value="searchQuery"
-            placeholder="Юзернейм, имя или фамилия"
+            placeholder="Юзернейм, номер телефона, имя или фамилия"
           />
         </div>
 
@@ -227,6 +237,7 @@ onBeforeMount(fetchRegisteredUsers);
         </NTooltip>
       </div>
     </form>
+
     <div class="registered-users-view__list">
       <NTable :single-line="false">
         <thead>
@@ -234,19 +245,24 @@ onBeforeMount(fetchRegisteredUsers);
             <th>Имя</th>
             <th>Фамилия</th>
             <th>Юзернейм</th>
+            <th>Номер телефона</th>
             <th>Дата рождения</th>
             <th>Дата вступления</th>
             <th>Подписка</th>
           </tr>
         </thead>
+
         <tbody>
           <tr
             v-for="user in data"
             :key="user.u_id"
+            class="registered-users-view__table-item"
+            @click="navigateToUser(user.u_id)"
           >
             <td>{{ user.first_name }}</td>
             <td>{{ user.last_name }}</td>
             <td>{{ user.tg_user_name }}</td>
+            <td>{{ user.phone_number }}</td>
             <td>
               {{ dateToRuLocaleString(user.birth_date) }}
             </td>
@@ -264,6 +280,7 @@ onBeforeMount(fetchRegisteredUsers);
           </tr>
         </tbody>
       </NTable>
+
       <div
         class="registered-users-view__list_bottom"
       >

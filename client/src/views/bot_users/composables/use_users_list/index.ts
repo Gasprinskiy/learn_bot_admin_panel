@@ -55,9 +55,10 @@ export function useUsersList() {
         data.value = response.data;
       } else {
         data.value = [...data.value, ...response.data];
-        pagidationParams.next_cursor_date = response.data[response.data.length - 1].join_date;
-        pagidationParams.next_cursor_id = response.data[response.data.length - 1].u_id;
       }
+
+      pagidationParams.next_cursor_date = response.data[response.data.length - 1].join_date;
+      pagidationParams.next_cursor_id = response.data[response.data.length - 1].u_id;
       leftDataCount.value = response.left;
     } catch (e) {
       if (isReset) {

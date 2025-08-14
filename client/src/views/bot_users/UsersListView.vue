@@ -19,29 +19,30 @@ const currentTab = computed<UserListTab>({
       name: value,
     });
   },
-
 });
 
-
+const isSingleUser = computed<boolean>(() => route.name === 'registered-user');
 </script>
 
 <template>
   <div class="users-list-view">
-    <h2 class="users-list-view__head">
-      Пользователи бота
-    </h2>
+    <template v-if="!isSingleUser">
+      <h2 class="users-list-view__head">
+        Пользователи бота
+      </h2>
 
-    <div class="users-list-view__tabs">
-      <NTabs
-        v-model:value="currentTab"
-        type="segment"
-      >
-        <NTabPane tab="Зарегистрированные" :name="UserListTab.REGISTERED" />
-        <NTabPane tab="Не зарегистрированные" :name="UserListTab.UNREGISTERED" />
-      </NTabs>
-    </div>
+      <div class="users-list-view__tabs">
+        <NTabs
+          v-model:value="currentTab"
+          type="segment"
+        >
+          <NTabPane tab="Зарегистрированные" :name="UserListTab.REGISTERED" />
+          <NTabPane tab="Не зарегистрированные (в разработке)" :name="UserListTab.UNREGISTERED" disabled />
+        </NTabs>
+      </div>
 
-    <NDivider class="users-list-view__divider" />
+      <NDivider class="users-list-view__divider" />
+    </template>
 
     <div class="users-list-view__body">
       <RouterView />

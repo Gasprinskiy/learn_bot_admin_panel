@@ -82,6 +82,13 @@ const usersListRoute: ReadonlyRecordRaw = {
         return import('@/views/bot_users/children/unregistered/UnregisteredUsersView.vue');
       },
     },
+    {
+      path: 'registered/:id',
+      name: 'registered-user',
+      component: () => {
+        return import('@/views/bot_users/children/single-user/SingleRegisteredUser.vue');
+      },
+    },
   ],
 };
 

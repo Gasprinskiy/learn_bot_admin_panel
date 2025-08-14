@@ -60,6 +60,13 @@ func NewBotUsersHandler(
 			handler.middleware.CheckAccessRight([]profile.AccessRight{profile.AccessRightFull, profile.AccessRightManager}),
 			handler.PrintBotUsers,
 		)
+
+		group.GET(
+			"/:user_id",
+			handler.middleware.CheckAccesToken(),
+			handler.middleware.CheckAccessRight([]profile.AccessRight{profile.AccessRightFull, profile.AccessRightManager}),
+			handler.GetUserByID,
+		)
 	}
 }
 
@@ -115,4 +122,28 @@ func (h *BotUsersHandler) PrintBotUsers(gctx *gin.Context) {
 	gctx.Header("Content-Length", strconv.Itoa(len(data)))
 
 	gctx.Data(http.StatusOK, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", data)
+}
+
+func (h *BotUsersHandler) GetUserByID(gctx *gin.Context) {
+	userID, err := strconv.Atoi(gctx.Param("user_id"))
+	if err != nil {
+		gin_gen.HandleError(gctx, global.ErrInvalidParam)
+		return
+	}
+
+	data, err := transaction.RunInTx(
+		gctx,
+		h.log,
+		h.sm,
+		func(ctx context.Context) (bot_users.BotUserProfile, error) {
+			return h.ui.Usecase.BotUsers.FindUserByID(ctx, userID)
+		},
+	)
+
+	if err != nil {
+		gin_gen.HandleError(gctx, err)
+		return
+	}
+
+	gctx.JSON(http.StatusOK, data)
 }

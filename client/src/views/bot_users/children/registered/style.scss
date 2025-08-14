@@ -68,4 +68,12 @@
     justify-content: center;
     padding: 15px 0;
   }
+
+  &__table-item {
+    cursor: pointer;
+
+    &:hover {
+      opacity: 0.8;
+    }
+  }
 }

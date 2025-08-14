@@ -26,6 +26,8 @@ var filtersQueryMap = map[string]string{
 	bot_users.FilterKeyQuery(true): ` (
 		bu.tg_user_name ILIKE '%' || :query || '%'
 		OR
+		bu.phone_number ILIKE '%' || :query || '%'
+		OR
 		bu.first_name ILIKE '%' || :query || '%'
 		OR
 		bu.last_name ILIKE '%' || :query || '%'
@@ -150,4 +152,28 @@ func (r *botUsers) FindBotRegisteredUsers(ts transaction.Session, param bot_user
 	}
 
 	return sql_gen.SelectNamedStruct[bot_users.BotUserProfile](SqlxTx(ts), sqlQuery, param)
+}
+
+func (r *botUsers) FindUserByID(ts transaction.Session, id int) (bot_users.BotUserProfile, error) {
+	sqlQuery := `
+		SELECT
+			bu.u_id,
+			bu.tg_id,
+			bu.tg_user_name,
+			bu.first_name,
+			bu.last_name,
+			bu.birth_date,
+			bu.phone_number,
+			bu.join_date,
+			bu.register_date,
+			bp.sub_id,
+			bp.p_time,
+			bst.term_in_month
+		FROM bot_users_profile bu
+			LEFT JOIN bot_users_purchases bp ON (bp.u_id = bu.u_id)
+			LEFT JOIN bot_subscription_types bst ON (bst.sub_id = bp.sub_id)
+		WHERE bu.u_id = $1
+	`
+
+	return sql_gen.Get[bot_users.BotUserProfile](SqlxTx(ts), sqlQuery, id)
 }
