@@ -3,7 +3,7 @@ import { computed, shallowReactive, shallowRef } from 'vue';
 
 import $api from '@/packages/api/client';
 import type { PaginationParams } from '@/shared/types/common';
-import type { BotUserProfile, BotUserProfileListResponse, BotUserProfileQueryParam } from '@/shared/types/profile';
+import type { BotUserProfile, BotUserProfileListResponse, BotUserProfileQueryParam } from '@/shared/types/bot_users';
 
 import { ErrorMessagesByCode } from './constants';
 

@@ -1,4 +1,4 @@
-import { SubscriptionStatus } from '@/shared/types/profile';
+import { SubscriptionStatus } from '@/shared/types/bot_users';
 import type { SelectMixedOption } from 'naive-ui/es/select/src/interface';
 
 type UIStatusType = 'default' | 'primary' | 'success' | 'info' | 'warning' | 'error';

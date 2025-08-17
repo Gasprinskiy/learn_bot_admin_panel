@@ -26,3 +26,9 @@ type BotUserProfile struct {
 func (b *BotUserProfile) SetSubscriptionStatus(value SubscriptionStatus) {
 	b.SubscrStatus = value
 }
+
+type BotSubscriptionType struct {
+	SubID       int     `json:"sub_id" db:"sub_id"`
+	TermInMonth int     `json:"term_in_month" db:"term_in_month"`
+	Price       float64 `json:"price" db:"price"`
+}

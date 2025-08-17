@@ -58,7 +58,7 @@ func NewBotUsersHandler(
 			"/excel_file",
 			handler.middleware.CheckAccesToken(),
 			handler.middleware.CheckAccessRight([]profile.AccessRight{profile.AccessRightFull, profile.AccessRightManager}),
-			handler.PrintBotUsers,
+			handler.GetBotUsersExcelFile,
 		)
 
 		group.GET(
@@ -66,6 +66,20 @@ func NewBotUsersHandler(
 			handler.middleware.CheckAccesToken(),
 			handler.middleware.CheckAccessRight([]profile.AccessRight{profile.AccessRightFull, profile.AccessRightManager}),
 			handler.GetUserByID,
+		)
+
+		group.GET(
+			"/subscr_types",
+			handler.middleware.CheckAccesToken(),
+			handler.middleware.CheckAccessRight([]profile.AccessRight{profile.AccessRightFull, profile.AccessRightManager}),
+			handler.GetBotSubscriptionTypes,
+		)
+
+		group.POST(
+			"/purchase/:user_id",
+			handler.middleware.CheckAccesToken(),
+			handler.middleware.CheckAccessRight([]profile.AccessRight{profile.AccessRightFull, profile.AccessRightManager}),
+			handler.PostPurchase,
 		)
 	}
 }
@@ -95,7 +109,7 @@ func (h *BotUsersHandler) GetBotUsers(gctx *gin.Context) {
 	gctx.JSON(http.StatusOK, data)
 }
 
-func (h *BotUsersHandler) PrintBotUsers(gctx *gin.Context) {
+func (h *BotUsersHandler) GetBotUsersExcelFile(gctx *gin.Context) {
 	var param bot_users.FindBotRegisteredUsersQuertParseParam
 
 	if err := gctx.ShouldBindQuery(&param); err != nil {
@@ -137,6 +151,48 @@ func (h *BotUsersHandler) GetUserByID(gctx *gin.Context) {
 		h.sm,
 		func(ctx context.Context) (bot_users.BotUserProfile, error) {
 			return h.ui.Usecase.BotUsers.FindUserByID(ctx, userID)
+		},
+	)
+
+	if err != nil {
+		gin_gen.HandleError(gctx, err)
+		return
+	}
+
+	gctx.JSON(http.StatusOK, data)
+}
+
+func (h *BotUsersHandler) PostPurchase(gctx *gin.Context) {
+	userID, err := strconv.Atoi(gctx.Param("user_id"))
+	if err != nil {
+		gin_gen.HandleError(gctx, global.ErrInvalidParam)
+		return
+	}
+
+	serviceID := gctx.PostForm("sub_id")
+
+	// Получаем квитанцию (файл)
+	file, _, err := gctx.Request.FormFile("receipt")
+	if err != nil {
+		gin_gen.HandleError(gctx, global.ErrInvalidParam)
+		return
+	}
+	defer file.Close()
+
+	fmt.Println("userID: ", userID)
+	fmt.Println("serviceID: ", serviceID)
+	fmt.Println("file: ", file)
+
+	gctx.JSON(http.StatusOK, gin.H{"success": true})
+}
+
+func (h *BotUsersHandler) GetBotSubscriptionTypes(gctx *gin.Context) {
+	data, err := transaction.RunInTx(
+		gctx,
+		h.log,
+		h.sm,
+		func(ctx context.Context) ([]bot_users.BotSubscriptionType, error) {
+			return h.ui.Usecase.BotUsers.LoadAllBotSubscriptionTypes(ctx)
 		},
 	)
 

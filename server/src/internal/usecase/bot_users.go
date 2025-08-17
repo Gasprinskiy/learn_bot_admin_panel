@@ -127,3 +127,19 @@ func (u *BotUsers) setUserSubscriptionStatus(user bot_users.BotUserProfile) bot_
 
 	return user
 }
+
+func (u *BotUsers) LoadAllBotSubscriptionTypes(ctx context.Context) ([]bot_users.BotSubscriptionType, error) {
+	ts := transaction.MustGetSession(ctx)
+
+	user, err := u.ri.Repository.BotUsers.LoadAllBotSubscriptionTypes(ts)
+	if err != nil {
+		u.log.Db.Errorln(u.logPrefix(), "не удалось загрузить список подписок:", err)
+		return nil, global.ErrInternalError
+	}
+
+	return user, nil
+}
+
+func (u *BotUsers) PurchaseSubscription(ctx context.Context, param bot_users.PurchaseSubscriptionParam) error {
+	return nil
+}

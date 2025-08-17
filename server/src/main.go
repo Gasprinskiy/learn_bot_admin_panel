@@ -91,8 +91,6 @@ func main() {
 		c.AbortWithStatus(204)
 	})
 
-	router.Static("/uploads", "./uploads")
-
 	v1Router := router.Group("/api/v1")
 	v1Router.Use(cors.New(ginConfig))
 	srv := &http.Server{

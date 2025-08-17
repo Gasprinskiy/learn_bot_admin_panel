@@ -3,6 +3,7 @@ package bot_users
 import (
 	"learn_bot_admin_panel/tools/gennull"
 	"learn_bot_admin_panel/tools/sql_null"
+	"mime/multipart"
 	"strings"
 	"time"
 )
@@ -93,4 +94,27 @@ type FindBotRegisteredUsersInnerParam struct {
 	JoinDateFrom       sql_null.NullTime   `db:"join_date_from"`
 	JoinDateTill       sql_null.NullTime   `db:"join_date_till"`
 	SubscriptionStatus gennull.GenericNull[SubscriptionStatus]
+}
+
+type PurchaseSubscriptionParam struct {
+	BotUserID int
+	ManagerID int
+	SubID     int
+	File      multipart.File
+}
+
+type PurchaseSubscriptionDbParam struct {
+	BotUserID    int       `db:"u_id"`
+	ManagerID    int       `db:"manager_id"`
+	SubID        int       `db:"sub_id"`
+	PurchaseTime time.Time `db:"p_time"`
+}
+
+func (p PurchaseSubscriptionParam) NewPurchaseSubscriptionDbParam() PurchaseSubscriptionDbParam {
+	return PurchaseSubscriptionDbParam{
+		BotUserID:    p.BotUserID,
+		ManagerID:    p.ManagerID,
+		SubID:        p.SubID,
+		PurchaseTime: time.Now(),
+	}
 }

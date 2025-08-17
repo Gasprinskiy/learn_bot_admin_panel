@@ -1,0 +1,21 @@
+.create-purchase {
+  &__form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  &__input {
+    display: flex;
+    flex-direction: column;
+
+    &.error .n-upload-dragger {
+      border-color: #e88080 !important;
+    }
+
+    &_message {
+      font-size: 12px;
+      color: #e88080;
+    }
+  }
+}

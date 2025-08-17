@@ -177,3 +177,16 @@ func (r *botUsers) FindUserByID(ts transaction.Session, id int) (bot_users.BotUs
 
 	return sql_gen.Get[bot_users.BotUserProfile](SqlxTx(ts), sqlQuery, id)
 }
+
+func (r *botUsers) LoadAllBotSubscriptionTypes(ts transaction.Session) ([]bot_users.BotSubscriptionType, error) {
+	sqlQuery := `
+		SELECT
+			bst.sub_id,
+			bst.term_in_month,
+			bst.price
+		FROM bot_subscription_types bst
+		ORDER BY bst.price
+	`
+
+	return sql_gen.Select[bot_users.BotSubscriptionType](SqlxTx(ts), sqlQuery)
+}

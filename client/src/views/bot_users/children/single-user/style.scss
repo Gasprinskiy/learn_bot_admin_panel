@@ -1,0 +1,10 @@
+.single-user {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  &__head {
+    display: flex;
+    justify-content: space-between;
+  }
+}

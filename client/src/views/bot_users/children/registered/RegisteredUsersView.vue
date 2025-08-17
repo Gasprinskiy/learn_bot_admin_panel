@@ -3,13 +3,15 @@ import { NButton, NDatePicker, NIcon, NInput, NInputNumber, NSelect, NTable, NTa
 import { RefreshOutlined, SearchOutlined } from '@vicons/material';
 import { DocumentTextOutline } from '@vicons/ionicons5';
 import { computed, onBeforeMount } from 'vue';
+import { useRouter } from 'vue-router';
 
-import type { SubscriptionStatus } from '@/shared/types/profile';
+import type { SubscriptionStatus } from '@/shared/types/bot_users';
+import { dateToRuLocaleString } from '@/packages/chronos';
 
 import { SubscriptionStatusSelectOptions, SubscriptionStatusTitleMap, SubscriptionUIStatus } from './constants';
 import { useUsersList } from '../../composables/use_users_list';
-import router from '@/router';
 
+const router = useRouter();
 const {
   data,
   searchParams,
@@ -104,14 +106,6 @@ const ageTill = computed<number | null>({
     searchParams.age_till = value;
   },
 });
-
-function dateToRuLocaleString(date: string): string {
-  return new Date(date).toLocaleDateString('ru-RU', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
-}
 
 async function onReset() {
   resetSearchParams();

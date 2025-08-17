@@ -21,6 +21,7 @@ type Profile interface {
 type BotUsers interface {
 	FindBotRegisteredUsers(ts transaction.Session, param bot_users.FindBotRegisteredUsersInnerParam) ([]bot_users.BotUserProfile, error)
 	FindUserByID(ts transaction.Session, id int) (bot_users.BotUserProfile, error)
+	LoadAllBotSubscriptionTypes(ts transaction.Session) ([]bot_users.BotSubscriptionType, error)
 }
 
 type TgBot interface {
