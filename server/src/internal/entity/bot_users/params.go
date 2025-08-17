@@ -96,11 +96,32 @@ type FindBotRegisteredUsersInnerParam struct {
 	SubscriptionStatus gennull.GenericNull[SubscriptionStatus]
 }
 
+type PurchaseSubscriptionFile struct {
+	File   multipart.File
+	Header multipart.FileHeader
+}
+
 type PurchaseSubscriptionParam struct {
 	BotUserID int
 	ManagerID int
 	SubID     int
-	File      multipart.File
+	FileData  PurchaseSubscriptionFile
+}
+
+func NewPurchaseSubscriptionParam(
+	botUserID, managerID, subID int,
+	file multipart.File,
+	header multipart.FileHeader,
+) PurchaseSubscriptionParam {
+	return PurchaseSubscriptionParam{
+		BotUserID: botUserID,
+		ManagerID: managerID,
+		SubID:     subID,
+		FileData: PurchaseSubscriptionFile{
+			File:   file,
+			Header: header,
+		},
+	}
 }
 
 type PurchaseSubscriptionDbParam struct {

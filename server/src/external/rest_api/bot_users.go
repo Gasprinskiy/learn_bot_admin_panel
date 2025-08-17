@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"learn_bot_admin_panel/config"
 	"learn_bot_admin_panel/external/rest_api/middleware"
+	"learn_bot_admin_panel/internal/entity/app_jwt"
 	"learn_bot_admin_panel/internal/entity/bot_users"
 	"learn_bot_admin_panel/internal/entity/global"
 	"learn_bot_admin_panel/internal/entity/profile"
@@ -171,17 +172,32 @@ func (h *BotUsersHandler) PostPurchase(gctx *gin.Context) {
 
 	serviceID := gctx.PostForm("sub_id")
 
-	// Получаем квитанцию (файл)
-	file, _, err := gctx.Request.FormFile("receipt")
+	file, header, err := gctx.Request.FormFile("receipt")
 	if err != nil {
 		gin_gen.HandleError(gctx, global.ErrInvalidParam)
 		return
 	}
 	defer file.Close()
 
+	jwtClaims, exists := gctx.Get(middleware.UserDataKey)
+	if !exists {
+		gin_gen.HandleError(gctx, global.ErrInternalError)
+		return
+	}
+
+	claimsData, ok := jwtClaims.(app_jwt.Claims)
+	if !ok {
+		gin_gen.HandleError(gctx, global.ErrInternalError)
+		return
+	}
+
 	fmt.Println("userID: ", userID)
 	fmt.Println("serviceID: ", serviceID)
 	fmt.Println("file: ", file)
+
+	param := bot_users.NewPurchaseSubscriptionParam(
+		userID,
+	)
 
 	gctx.JSON(http.StatusOK, gin.H{"success": true})
 }
