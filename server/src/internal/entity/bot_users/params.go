@@ -1,9 +1,11 @@
 package bot_users
 
 import (
+	"fmt"
 	"learn_bot_admin_panel/tools/gennull"
 	"learn_bot_admin_panel/tools/sql_null"
 	"mime/multipart"
+	"path/filepath"
 	"strings"
 	"time"
 )
@@ -99,6 +101,11 @@ type FindBotRegisteredUsersInnerParam struct {
 type PurchaseSubscriptionFile struct {
 	File   multipart.File
 	Header multipart.FileHeader
+}
+
+func (p PurchaseSubscriptionFile) CreateFileName(name string) string {
+	fileExtension := filepath.Ext(p.Header.Filename)
+	return fmt.Sprintf("%s%s", name, fileExtension)
 }
 
 type PurchaseSubscriptionParam struct {

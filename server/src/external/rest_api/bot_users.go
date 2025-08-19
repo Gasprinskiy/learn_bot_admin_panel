@@ -170,7 +170,11 @@ func (h *BotUsersHandler) PostPurchase(gctx *gin.Context) {
 		return
 	}
 
-	serviceID := gctx.PostForm("sub_id")
+	serviceID, err := strconv.Atoi(gctx.PostForm("sub_id"))
+	if err != nil {
+		gin_gen.HandleError(gctx, global.ErrInvalidParam)
+		return
+	}
 
 	file, header, err := gctx.Request.FormFile("receipt")
 	if err != nil {
@@ -191,13 +195,27 @@ func (h *BotUsersHandler) PostPurchase(gctx *gin.Context) {
 		return
 	}
 
-	fmt.Println("userID: ", userID)
-	fmt.Println("serviceID: ", serviceID)
-	fmt.Println("file: ", file)
-
 	param := bot_users.NewPurchaseSubscriptionParam(
 		userID,
+		claimsData.UserID,
+		serviceID,
+		file,
+		*header,
 	)
+
+	err = transaction.RunInTxExec(
+		gctx,
+		h.log,
+		h.sm,
+		func(ctx context.Context) error {
+			return h.ui.BotUsers.PurchaseSubscription(ctx, param)
+		},
+	)
+
+	if err != nil {
+		gin_gen.HandleError(gctx, err)
+		return
+	}
 
 	gctx.JSON(http.StatusOK, gin.H{"success": true})
 }

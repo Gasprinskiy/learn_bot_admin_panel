@@ -190,3 +190,15 @@ func (r *botUsers) LoadAllBotSubscriptionTypes(ts transaction.Session) ([]bot_us
 
 	return sql_gen.Select[bot_users.BotSubscriptionType](SqlxTx(ts), sqlQuery)
 }
+
+func (r *botUsers) CreateSubscriptionPurchase(ts transaction.Session, param bot_users.Purchase) (int64, error) {
+	sqlQuery := `
+	INSERT INTO bot_users_purchases
+		(sub_id, u_id, p_time, discount, receipt_json, manager_id)
+	VALUES
+		(:sub_id, :u_id, :p_time, :discount, :receipt_json, :manager_id)
+	RETURNING p_id
+	`
+
+	return sql_gen.ExecNamedReturnLastInsterted(SqlxTx(ts), sqlQuery, param)
+}

@@ -23,6 +23,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-telegram/bot"
 	"github.com/jmoiron/sqlx"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/redis/go-redis/v9"
@@ -75,6 +77,13 @@ func main() {
 	}
 	defer b.Close(ctx)
 
+	// инициализация grpc соеденения
+	grpcConn, err := grpc.NewClient(config.GRPCAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Panic("ошибка при подключении к grpc серверу: ", err)
+	}
+	defer grpcConn.Close()
+
 	// Настройка HTTP-сервера
 	ginConfig := cors.Config{
 		AllowOrigins:     []string{"http://admin-panel.local:3000", "https://admin-panel.local:3000"},
@@ -101,7 +110,7 @@ func main() {
 	// инициализация event bus авторизация
 	authChan := chanel_bus.NewBusChanel[profile.User]()
 	// инициализация репо
-	ri := rimport.NewRepositoryImports(config, rdb)
+	ri := rimport.NewRepositoryImports(config, rdb, grpcConn)
 
 	// инициализация usecase
 	ui := uimport.NewUsecaseImport(ri, logger, authChan, config, b)

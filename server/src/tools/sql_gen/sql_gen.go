@@ -12,6 +12,23 @@ func ExecNamed[T any](tx *sqlx.Tx, sqlQuery string, data T) error {
 	return err
 }
 
+func ExecNamedReturnLastInsterted[T any](tx *sqlx.Tx, sqlQuery string, data T) (int64, error) {
+	var id int64
+
+	stmt, err := tx.PrepareNamed(sqlQuery)
+	if err != nil {
+		return id, err
+	}
+	defer stmt.Close()
+
+	err = stmt.Get(&id, data)
+	if err != nil {
+		return id, err
+	}
+
+	return id, nil
+}
+
 func Get[T any](tx *sqlx.Tx, sqlQuery string, params ...any) (T, error) {
 	var data T
 

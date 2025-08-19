@@ -32,3 +32,29 @@ type BotSubscriptionType struct {
 	TermInMonth int     `json:"term_in_month" db:"term_in_month"`
 	Price       float64 `json:"price" db:"price"`
 }
+
+type Purchase struct {
+	SubID        int                  `db:"sub_id"`
+	UserID       int                  `db:"u_id"`
+	PurchaseTime time.Time            `db:"p_time"`
+	Discount     sql_null.NullFloat64 `db:"discount"`
+	ReceiptJSON  sql_null.NullString  `db:"receipt_json"`
+	ManagerID    sql_null.NullInt64   `db:"manager_id"`
+}
+
+func NewPurchase(
+	subID, userID int,
+	pTime time.Time,
+	discount sql_null.NullFloat64,
+	receiptJSON sql_null.NullString,
+	managerID sql_null.NullInt64,
+) Purchase {
+	return Purchase{
+		SubID:        subID,
+		UserID:       userID,
+		PurchaseTime: pTime,
+		Discount:     discount,
+		ReceiptJSON:  receiptJSON,
+		ManagerID:    managerID,
+	}
+}

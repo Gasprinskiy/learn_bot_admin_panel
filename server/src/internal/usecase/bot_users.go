@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"fmt"
+	"io"
 	"learn_bot_admin_panel/config"
 	"learn_bot_admin_panel/internal/entity/bot_users"
 	"learn_bot_admin_panel/internal/entity/global"
@@ -12,8 +14,12 @@ import (
 	"learn_bot_admin_panel/tools/chronos"
 	"learn_bot_admin_panel/tools/excel"
 	"learn_bot_admin_panel/tools/logger"
+	"learn_bot_admin_panel/tools/sql_null"
+	"os"
+	"path/filepath"
 
 	"github.com/go-telegram/bot"
+	"github.com/sirupsen/logrus"
 )
 
 type BotUsers struct {
@@ -141,5 +147,55 @@ func (u *BotUsers) LoadAllBotSubscriptionTypes(ctx context.Context) ([]bot_users
 }
 
 func (u *BotUsers) PurchaseSubscription(ctx context.Context, param bot_users.PurchaseSubscriptionParam) error {
+	lf := logrus.Fields{
+		"u_id":     param.ManagerID,
+		"bot_u_id": param.BotUserID,
+	}
+
+	ts := transaction.MustGetSession(ctx)
+
+	purchase := bot_users.NewPurchase(
+		param.SubID,
+		param.BotUserID,
+		chronos.BeginingOfNow(),
+		sql_null.NullFloat64{},
+		sql_null.NullString{},
+		sql_null.NewInt64(param.ManagerID),
+	)
+
+	purchaseID, err := u.ri.BotUsers.CreateSubscriptionPurchase(ts, purchase)
+	if err != nil {
+		u.log.Db.WithFields(lf).Errorln(u.logPrefix(), "не создать запись о покупке подписки:", err)
+		return global.ErrInternalError
+	}
+
+	fileName := param.FileData.CreateFileName(fmt.Sprintf(bot_users.BilFileNameTemplate, purchaseID))
+	fullPath := filepath.Join("./uploads", fileName)
+
+	dst, err := os.Create(fullPath)
+	if err != nil {
+		u.log.Db.WithFields(lf).Errorln(u.logPrefix(), "не удалось создать файл:", err)
+		return global.ErrInternalError
+	}
+	defer dst.Close()
+
+	_, err = io.Copy(dst, param.FileData.File)
+	if err != nil {
+		u.log.Db.WithFields(lf).Errorln(u.logPrefix(), "не удалось скопировать файл:", err)
+		return global.ErrInternalError
+	}
+
+	user, err := u.ri.BotUsers.FindUserByID(ts, param.BotUserID)
+	if err != nil {
+		u.log.Db.WithFields(lf).Errorln(u.logPrefix(), "не удалось найти пользователя:", err)
+		return global.ErrInternalError
+	}
+
+	_, err = u.ri.NotifyMessage.SendInviteLink(ctx, user.TgID)
+	if err != nil {
+		u.log.Db.WithFields(lf).Errorln("не удалось отправить ссылку на канал:", err)
+		return global.ErrInternalError
+	}
+
 	return nil
 }

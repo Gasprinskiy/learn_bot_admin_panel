@@ -44,3 +44,5 @@ var (
 		return fmt.Sprintf("%s:%t:%s", FilterKeySubscriptionStatusPrefix, valid, status)
 	}
 )
+
+const BilFileNameTemplate = "bill_%d"

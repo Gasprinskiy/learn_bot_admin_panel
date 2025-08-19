@@ -20,6 +20,7 @@ type Config struct {
 	SSETTL       time.Duration
 	JwtSecretTTL time.Duration
 	RedisTTL     time.Duration
+	GRPCAddr     string
 }
 
 // NewConfig загружает переменные из .env и возвращает структуру Config
@@ -45,6 +46,7 @@ func NewConfig() *Config {
 		BotToken:     os.Getenv("BOT_TOKEN"),
 		RedisPass:    os.Getenv("REDIS_PASSWORD"),
 		JwtSecret:    os.Getenv("JWT_SECRET"),
+		GRPCAddr:     os.Getenv("GRPC_ADDR"),
 		ServerPort:   fmt.Sprintf(":%s", os.Getenv("HTTP_SERVER_PORT")),
 		RedisAddr:    fmt.Sprintf("redis:%s", os.Getenv("REDIS_PORT")),
 		RedisTTL:     time.Minute * time.Duration(redisTtl),

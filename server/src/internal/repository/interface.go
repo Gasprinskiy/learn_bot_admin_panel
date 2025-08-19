@@ -22,6 +22,7 @@ type BotUsers interface {
 	FindBotRegisteredUsers(ts transaction.Session, param bot_users.FindBotRegisteredUsersInnerParam) ([]bot_users.BotUserProfile, error)
 	FindUserByID(ts transaction.Session, id int) (bot_users.BotUserProfile, error)
 	LoadAllBotSubscriptionTypes(ts transaction.Session) ([]bot_users.BotSubscriptionType, error)
+	CreateSubscriptionPurchase(ts transaction.Session, param bot_users.Purchase) (int64, error)
 }
 
 type TgBot interface {
@@ -31,4 +32,8 @@ type TgBot interface {
 type AuthCache interface {
 	SetTempUserData(ctx context.Context, tempKey string, user profile.User) error
 	GetTempUserData(ctx context.Context, tempKey string) (profile.User, error)
+}
+
+type NotifyMessage interface {
+	SendInviteLink(ctx context.Context, TGID int64) (bool, error)
 }
