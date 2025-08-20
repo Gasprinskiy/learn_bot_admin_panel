@@ -173,11 +173,10 @@ func (u *BotUsers) PurchaseSubscription(ctx context.Context, param bot_users.Pur
 	}
 
 	ts := transaction.MustGetSession(ctx)
-
 	purchase := bot_users.NewPurchase(
 		param.SubID,
 		param.BotUserID,
-		chronos.BeginingOfNow(),
+		chronos.BeginingOfNowLocal(),
 		sql_null.NullFloat64{},
 		sql_null.NullString{},
 		sql_null.NewInt64(param.ManagerID),
