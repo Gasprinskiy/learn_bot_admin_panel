@@ -212,9 +212,17 @@ onBeforeMount(getUserByID);
             <tr v-if="purchase.receipt_file_name !== null">
               <td>Квитанция об оплате</td>
               <td>
-                <NImage width="150" :src="`${UploadsURL}/${purchase.receipt_file_name}`">
+                <NImage
+                  width="150"
+                  :src="`${UploadsURL}/${purchase.receipt_file_name}`"
+                  :show-toolbar="false"
+                >
                   <template #error>
-                    <NIcon :size="150" color="lightGrey" :component="ImageOutline" />
+                    <NIcon
+                      :size="150"
+                      color="lightGrey"
+                      :component="ImageOutline"
+                    />
                   </template>
                 </NImage>
               </td>

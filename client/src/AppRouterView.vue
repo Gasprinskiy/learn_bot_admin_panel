@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NDivider, NScrollbar, useLoadingBar } from 'naive-ui';
+import { NDivider, NImage, NScrollbar, useLoadingBar } from 'naive-ui';
 import { useApiRequestEventBus } from '@/composables/use_api_requests_event_bus';
 import { onMounted, shallowRef } from 'vue';
 import { useRouter } from 'vue-router';
@@ -45,7 +45,9 @@ router.beforeEach(checkAuthOnRouteChange);
     :class="{ blocked: isBlocked || isVisible }"
   >
     <AppHeader />
+
     <NDivider class="app-wrapper__divider" />
+
     <div class="app-wrapper__scrollbar-container">
       <NScrollbar
         class="app-wrapper__scrollbar"
