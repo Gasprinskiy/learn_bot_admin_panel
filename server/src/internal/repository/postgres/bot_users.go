@@ -67,7 +67,7 @@ func (r *botUsers) FindBotRegisteredUsers(ts transaction.Session, param bot_user
 				LEFT JOIN LATERAL (
 					SELECT bp.*
 					FROM bot_users_purchases bp
-					ORDER BY bp.p_time DESC
+					ORDER BY bp.p_id DESC
 					LIMIT 1
 				) bp ON (bp.u_id = bu.u_id)
 				LEFT JOIN bot_subscription_types bst ON (bst.sub_id = bp.sub_id)
@@ -196,6 +196,7 @@ func (r *botUsers) FindUserPurchases(ts transaction.Session, userID int) ([]bot_
 			JOIN bot_subscription_types st ON (st.sub_id = up.sub_id)
 			LEFT JOIN admin_panel_users ps ON (ps.u_id = up.manager_id)
 		WHERE up.u_id = $1
+		ORDER BY up.p_id DESC
 	`
 
 	return sql_gen.Select[bot_users.BotUserPurchase](SqlxTx(ts), sqlQuery, userID)
