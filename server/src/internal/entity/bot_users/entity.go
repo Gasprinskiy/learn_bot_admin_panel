@@ -5,16 +5,20 @@ import (
 	"time"
 )
 
+type BotUserCommonData struct {
+	UID          int64     `db:"u_id" json:"u_id"`
+	TgID         int64     `db:"tg_id" json:"tg_id"`
+	TgUserName   string    `db:"tg_user_name" json:"tg_user_name" excel_head:"Юзернейм" excel_cell:"string"`
+	FirstName    string    `db:"first_name" json:"first_name" excel_head:"Имя" excel_cell:"string"`
+	LastName     string    `db:"last_name" json:"last_name" excel_head:"Фамилия" excel_cell:"string"`
+	BirthDate    time.Time `db:"birth_date" json:"birth_date" excel_head:"Дата рождения" excel_cell:"date"`
+	PhoneNumber  string    `db:"phone_number" json:"phone_number" excel_head:"Номер телефона" excel_cell:"string"`
+	JoinDate     time.Time `db:"join_date" json:"join_date" excel_head:"Дата вступления" excel_cell:"date"`
+	RegisterDate time.Time `db:"register_date" json:"register_date"`
+}
+
 type BotUserProfile struct {
-	UID                int64              `db:"u_id" json:"u_id"`
-	TgID               int64              `db:"tg_id" json:"tg_id"`
-	TgUserName         string             `db:"tg_user_name" json:"tg_user_name" excel_head:"Юзернейм" excel_cell:"string"`
-	FirstName          string             `db:"first_name" json:"first_name" excel_head:"Имя" excel_cell:"string"`
-	LastName           string             `db:"last_name" json:"last_name" excel_head:"Фамилия" excel_cell:"string"`
-	BirthDate          time.Time          `db:"birth_date" json:"birth_date" excel_head:"Дата рождения" excel_cell:"date"`
-	PhoneNumber        string             `db:"phone_number" json:"phone_number" excel_head:"Номер телефона" excel_cell:"string"`
-	JoinDate           time.Time          `db:"join_date" json:"join_date" excel_head:"Дата вступления" excel_cell:"date"`
-	RegisterDate       time.Time          `db:"register_date" json:"register_date"`
+	BotUserCommonData
 	CommonTotalCount   int                `db:"total_count" json:"-"`
 	SubscrID           sql_null.NullInt64 `db:"sub_id" json:"subscription_id"`
 	SubscrPurchaseDate sql_null.NullTime  `db:"p_time" json:"-"`
@@ -28,18 +32,39 @@ func (b *BotUserProfile) SetSubscriptionStatus(value SubscriptionStatus) {
 }
 
 type BotSubscriptionType struct {
-	SubID       int     `json:"sub_id" db:"sub_id"`
-	TermInMonth int     `json:"term_in_month" db:"term_in_month"`
-	Price       float64 `json:"price" db:"price"`
+	SubID       int     `db:"sub_id" json:"sub_id"`
+	TermInMonth int     `db:"term_in_month" json:"term_in_month"`
+	Price       float64 `db:"price" json:"price"`
 }
 
 type Purchase struct {
-	SubID        int                  `db:"sub_id"`
-	UserID       int                  `db:"u_id"`
-	PurchaseTime time.Time            `db:"p_time"`
-	Discount     sql_null.NullFloat64 `db:"discount"`
-	ReceiptJSON  sql_null.NullString  `db:"receipt_json"`
-	ManagerID    sql_null.NullInt64   `db:"manager_id"`
+	SubID         int                  `db:"sub_id"`
+	UserID        int                  `db:"u_id"`
+	PurchaseTime  time.Time            `db:"p_time"`
+	Discount      sql_null.NullFloat64 `db:"discount"`
+	ReceiptJSON   sql_null.NullString  `db:"receipt_json"`
+	ManagerID     sql_null.NullInt64   `db:"manager_id"`
+	PaymentTypeID int                  `db:"payment_type_id"`
+}
+
+type BotUserPurchase struct {
+	PID              int                  `db:"p_id" json:"p_id"`
+	SubID            int                  `db:"sub_id" json:"sub_id"`
+	PurchaseTime     time.Time            `db:"p_time" json:"p_time"`
+	PaymentTypeID    int                  `db:"payment_type_id" json:"payment_type_id"`
+	Discount         sql_null.NullFloat64 `db:"discount" json:"discount"`
+	ManagerID        sql_null.NullInt64   `db:"manager_id" json:"manager_id"`
+	Term             int                  `db:"term_in_month" json:"subscription_term"`
+	Price            float64              `db:"price" json:"price"`
+	ReceiptFileName  sql_null.NullString  `db:"receipt_file_name" json:"receipt_file_name"`
+	ManagerFirstName sql_null.NullString  `db:"manager_first_name" json:"manager_first_name"`
+	ManagerLastName  sql_null.NullString  `db:"manager_last_name" json:"manager_last_name"`
+	//
+	Status SubscriptionStatus `json:"subscription_status"`
+}
+
+func (b *BotUserPurchase) SetSubscriptionStatus(value SubscriptionStatus) {
+	b.Status = value
 }
 
 func NewPurchase(
@@ -48,13 +73,30 @@ func NewPurchase(
 	discount sql_null.NullFloat64,
 	receiptJSON sql_null.NullString,
 	managerID sql_null.NullInt64,
+	paymentTypeID int,
 ) Purchase {
 	return Purchase{
-		SubID:        subID,
-		UserID:       userID,
-		PurchaseTime: pTime,
-		Discount:     discount,
-		ReceiptJSON:  receiptJSON,
-		ManagerID:    managerID,
+		SubID:         subID,
+		UserID:        userID,
+		PurchaseTime:  pTime,
+		Discount:      discount,
+		ReceiptJSON:   receiptJSON,
+		ManagerID:     managerID,
+		PaymentTypeID: paymentTypeID,
+	}
+}
+
+type BotUserDetailData struct {
+	BotUserCommonData
+	PurchaseData []BotUserPurchase `json:"purchase_data"`
+}
+
+func NewBotUserDetailData(
+	commonData BotUserCommonData,
+	purchaseData []BotUserPurchase,
+) BotUserDetailData {
+	return BotUserDetailData{
+		BotUserCommonData: commonData,
+		PurchaseData:      purchaseData,
 	}
 }

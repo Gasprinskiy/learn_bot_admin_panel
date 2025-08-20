@@ -20,9 +20,11 @@ type Profile interface {
 
 type BotUsers interface {
 	FindBotRegisteredUsers(ts transaction.Session, param bot_users.FindBotRegisteredUsersInnerParam) ([]bot_users.BotUserProfile, error)
-	FindUserByID(ts transaction.Session, id int) (bot_users.BotUserProfile, error)
+	FindUserByID(ts transaction.Session, id int) (bot_users.BotUserCommonData, error)
 	LoadAllBotSubscriptionTypes(ts transaction.Session) ([]bot_users.BotSubscriptionType, error)
 	CreateSubscriptionPurchase(ts transaction.Session, param bot_users.Purchase) (int64, error)
+	FindUserPurchases(ts transaction.Session, userID int) ([]bot_users.BotUserPurchase, error)
+	SavePurchaseFileName(ts transaction.Session, pID int, fileName string) error
 }
 
 type TgBot interface {

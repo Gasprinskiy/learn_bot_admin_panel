@@ -88,50 +88,62 @@ func (u *BotUsers) FindRegisteredUsers(
 	result := global.NewCommotListSearchResponse(data, data[0].CommonTotalCount, param.Limit, param.PageCount)
 
 	for i, user := range result.Data {
-		user = u.setUserSubscriptionStatus(user)
+		user.SetSubscriptionStatus(u.getUserSubscriptionStatus(user.SubscrPurchaseDate, user.SubscrTerm.GetInt()))
 		result.Data[i] = user
 	}
 
 	return result, nil
 }
 
-func (u *BotUsers) FindUserByID(ctx context.Context, id int) (bot_users.BotUserProfile, error) {
-	var zero bot_users.BotUserProfile
+func (u *BotUsers) FindUserByID(ctx context.Context, id int) (bot_users.BotUserDetailData, error) {
+	lf := logrus.Fields{
+		"u_id": id,
+	}
+
+	var zero bot_users.BotUserDetailData
 
 	ts := transaction.MustGetSession(ctx)
 
-	user, err := u.ri.Repository.BotUsers.FindUserByID(ts, id)
+	commonData, err := u.ri.Repository.BotUsers.FindUserByID(ts, id)
 	switch err {
 	case nil:
-		user = u.setUserSubscriptionStatus(user)
 	case global.ErrNoData:
 		return zero, err
 
 	default:
-		u.log.Db.Errorln(u.logPrefix(), "не удалось найти пользователя:", err)
+		u.log.Db.WithFields(lf).Errorln(u.logPrefix(), "не удалось найти пользователя:", err)
 		return zero, global.ErrInternalError
 	}
 
-	return user, nil
-}
-
-func (u *BotUsers) setUserSubscriptionStatus(user bot_users.BotUserProfile) bot_users.BotUserProfile {
-	now := chronos.BeginingOfNow()
-
-	if user.SubscrPurchaseDate.Valid {
-		subDate := chronos.BeginingOfDate(user.SubscrPurchaseDate.Time)
-		expireDate := subDate.AddDate(0, user.SubscrTerm.GetInt(), 0)
-
-		if now.After(expireDate) {
-			user.SetSubscriptionStatus(bot_users.SubscriptionStatusExpired)
-		} else {
-			user.SetSubscriptionStatus(bot_users.SubscriptionStatusActive)
-		}
-	} else {
-		user.SetSubscriptionStatus(bot_users.SubscriptionStatusNotExists)
+	purchaseData, err := u.ri.Repository.BotUsers.FindUserPurchases(ts, id)
+	if err != nil && err != global.ErrNoData {
+		u.log.Db.WithFields(lf).Errorln(u.logPrefix(), "не удалось найти историю покупок пользователя:", err)
+		return zero, global.ErrInternalError
 	}
 
-	return user
+	for i, purchase := range purchaseData {
+		purchase.SetSubscriptionStatus(u.getUserSubscriptionStatus(sql_null.NewNullTime(purchase.PurchaseTime), purchase.Term))
+		purchaseData[i] = purchase
+	}
+
+	return bot_users.NewBotUserDetailData(commonData, purchaseData), nil
+}
+
+func (u *BotUsers) getUserSubscriptionStatus(purchaseDate sql_null.NullTime, term int) bot_users.SubscriptionStatus {
+	now := chronos.BeginingOfNow()
+
+	if purchaseDate.Valid {
+		subDate := chronos.BeginingOfDate(purchaseDate.Time)
+		expireDate := subDate.AddDate(0, term, 0)
+
+		if now.After(expireDate) {
+			return bot_users.SubscriptionStatusExpired
+		}
+
+		return bot_users.SubscriptionStatusActive
+	}
+
+	return bot_users.SubscriptionStatusNotExists
 }
 
 func (u *BotUsers) LoadAllBotSubscriptionTypes(ctx context.Context) ([]bot_users.BotSubscriptionType, error) {
@@ -147,6 +159,14 @@ func (u *BotUsers) LoadAllBotSubscriptionTypes(ctx context.Context) ([]bot_users
 }
 
 func (u *BotUsers) PurchaseSubscription(ctx context.Context, param bot_users.PurchaseSubscriptionParam) error {
+	if param.FileData.Header.Size > global.MaxFileSize {
+		return global.ErrFileSize
+	}
+
+	if _, exists := global.AbleFileExtMap[param.FileData.Ext()]; !exists {
+		return global.ErrInvalidParam
+	}
+
 	lf := logrus.Fields{
 		"u_id":     param.ManagerID,
 		"bot_u_id": param.BotUserID,
@@ -161,6 +181,7 @@ func (u *BotUsers) PurchaseSubscription(ctx context.Context, param bot_users.Pur
 		sql_null.NullFloat64{},
 		sql_null.NullString{},
 		sql_null.NewInt64(param.ManagerID),
+		bot_users.PaymentTypeIDP2P,
 	)
 
 	purchaseID, err := u.ri.BotUsers.CreateSubscriptionPurchase(ts, purchase)
@@ -170,7 +191,7 @@ func (u *BotUsers) PurchaseSubscription(ctx context.Context, param bot_users.Pur
 	}
 
 	fileName := param.FileData.CreateFileName(fmt.Sprintf(bot_users.BilFileNameTemplate, purchaseID))
-	fullPath := filepath.Join("./uploads", fileName)
+	fullPath := filepath.Join("../uploads", fileName)
 
 	dst, err := os.Create(fullPath)
 	if err != nil {
@@ -185,15 +206,21 @@ func (u *BotUsers) PurchaseSubscription(ctx context.Context, param bot_users.Pur
 		return global.ErrInternalError
 	}
 
+	err = u.ri.BotUsers.SavePurchaseFileName(ts, int(purchaseID), fileName)
+	if err != nil {
+		u.log.Db.WithFields(lf).Errorln(u.logPrefix(), "не удалось сохранить название файла:", err)
+		return global.ErrInternalError
+	}
+
 	user, err := u.ri.BotUsers.FindUserByID(ts, param.BotUserID)
 	if err != nil {
 		u.log.Db.WithFields(lf).Errorln(u.logPrefix(), "не удалось найти пользователя:", err)
 		return global.ErrInternalError
 	}
 
-	_, err = u.ri.NotifyMessage.SendInviteLink(ctx, user.TgID)
-	if err != nil {
-		u.log.Db.WithFields(lf).Errorln("не удалось отправить ссылку на канал:", err)
+	sent, err := u.ri.NotifyMessage.SendInviteLink(ctx, user.TgID)
+	if !sent || err != nil {
+		u.log.Db.WithFields(lf).Errorln("не удалось отправить ссылку на канал", err)
 		return global.ErrInternalError
 	}
 

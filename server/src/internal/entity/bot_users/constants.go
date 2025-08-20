@@ -46,3 +46,7 @@ var (
 )
 
 const BilFileNameTemplate = "bill_%d"
+
+const (
+	PaymentTypeIDP2P = 1
+)

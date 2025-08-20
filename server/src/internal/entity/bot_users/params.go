@@ -103,9 +103,12 @@ type PurchaseSubscriptionFile struct {
 	Header multipart.FileHeader
 }
 
+func (p PurchaseSubscriptionFile) Ext() string {
+	return filepath.Ext(p.Header.Filename)
+}
+
 func (p PurchaseSubscriptionFile) CreateFileName(name string) string {
-	fileExtension := filepath.Ext(p.Header.Filename)
-	return fmt.Sprintf("%s%s", name, fileExtension)
+	return fmt.Sprintf("%s%s", name, p.Ext())
 }
 
 type PurchaseSubscriptionParam struct {

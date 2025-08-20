@@ -150,7 +150,7 @@ func (h *BotUsersHandler) GetUserByID(gctx *gin.Context) {
 		gctx,
 		h.log,
 		h.sm,
-		func(ctx context.Context) (bot_users.BotUserProfile, error) {
+		func(ctx context.Context) (bot_users.BotUserDetailData, error) {
 			return h.ui.Usecase.BotUsers.FindUserByID(ctx, userID)
 		},
 	)

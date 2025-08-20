@@ -76,10 +76,12 @@ router.beforeEach(checkAuthOnRouteChange);
 
   &__scrollbar {
     height: calc(100vh - 57px);
+    padding-bottom: 10px;
 
     .n-scrollbar-content {
-      padding: 16px;
       height: 100%;
+      padding: 16px;
+
     }
   }
 }

@@ -16,6 +16,8 @@ var (
 	ErrInvalidParam = errors.New("InvalidParam")
 	// ErrExpired время вышло
 	ErrExpired = errors.New("Expired")
+	// ErrFileSize размер файла слишком большой
+	ErrFileSize = errors.New("FileSize")
 )
 
 var ErrStatusCodes = map[error]int{
@@ -24,6 +26,7 @@ var ErrStatusCodes = map[error]int{
 	ErrPermissionDenied: http.StatusUnauthorized,
 	ErrInvalidParam:     http.StatusBadRequest,
 	ErrExpired:          http.StatusGone,
+	ErrFileSize:         http.StatusRequestEntityTooLarge,
 	// ErrInvalidLoginOrPassword: http.StatusUnauthorized,
 	// ErrUserAllreadyExists:     http.StatusConflict,
 	// ErrNotAllowedToUse:        http.StatusUnauthorized,

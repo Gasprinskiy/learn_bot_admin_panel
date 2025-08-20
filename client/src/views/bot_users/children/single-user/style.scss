@@ -7,4 +7,16 @@
     display: flex;
     justify-content: space-between;
   }
+
+  &__purchases {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  &__purchases-info {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
 }

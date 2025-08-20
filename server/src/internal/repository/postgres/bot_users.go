@@ -64,7 +64,12 @@ func (r *botUsers) FindBotRegisteredUsers(ts transaction.Session, param bot_user
 				bp.p_time,
 				bst.term_in_month
 			FROM bot_users_profile bu
-				LEFT JOIN bot_users_purchases bp ON (bp.u_id = bu.u_id)
+				LEFT JOIN LATERAL (
+					SELECT bp.*
+					FROM bot_users_purchases bp
+					ORDER BY bp.p_time DESC
+					LIMIT 1
+				) bp ON (bp.u_id = bu.u_id)
 				LEFT JOIN bot_subscription_types bst ON (bst.sub_id = bp.sub_id)
 			%s
 			%s
@@ -154,7 +159,7 @@ func (r *botUsers) FindBotRegisteredUsers(ts transaction.Session, param bot_user
 	return sql_gen.SelectNamedStruct[bot_users.BotUserProfile](SqlxTx(ts), sqlQuery, param)
 }
 
-func (r *botUsers) FindUserByID(ts transaction.Session, id int) (bot_users.BotUserProfile, error) {
+func (r *botUsers) FindUserByID(ts transaction.Session, id int) (bot_users.BotUserCommonData, error) {
 	sqlQuery := `
 		SELECT
 			bu.u_id,
@@ -165,17 +170,35 @@ func (r *botUsers) FindUserByID(ts transaction.Session, id int) (bot_users.BotUs
 			bu.birth_date,
 			bu.phone_number,
 			bu.join_date,
-			bu.register_date,
-			bp.sub_id,
-			bp.p_time,
-			bst.term_in_month
+			bu.register_date
 		FROM bot_users_profile bu
-			LEFT JOIN bot_users_purchases bp ON (bp.u_id = bu.u_id)
-			LEFT JOIN bot_subscription_types bst ON (bst.sub_id = bp.sub_id)
 		WHERE bu.u_id = $1
 	`
 
-	return sql_gen.Get[bot_users.BotUserProfile](SqlxTx(ts), sqlQuery, id)
+	return sql_gen.Get[bot_users.BotUserCommonData](SqlxTx(ts), sqlQuery, id)
+}
+
+func (r *botUsers) FindUserPurchases(ts transaction.Session, userID int) ([]bot_users.BotUserPurchase, error) {
+	sqlQuery := `
+		SELECT
+			up.p_id,
+			up.sub_id,
+			up.discount,
+			up.p_time,
+			up.manager_id,
+			up.payment_type_id,
+			up.receipt_file_name,
+			st.term_in_month,
+			st.price,
+			ps.first_name as manager_first_name,
+			ps.last_name as manager_last_name
+		FROM bot_users_purchases up
+			JOIN bot_subscription_types st ON (st.sub_id = up.sub_id)
+			LEFT JOIN admin_panel_users ps ON (ps.u_id = up.manager_id)
+		WHERE up.u_id = $1
+	`
+
+	return sql_gen.Select[bot_users.BotUserPurchase](SqlxTx(ts), sqlQuery, userID)
 }
 
 func (r *botUsers) LoadAllBotSubscriptionTypes(ts transaction.Session) ([]bot_users.BotSubscriptionType, error) {
@@ -194,11 +217,18 @@ func (r *botUsers) LoadAllBotSubscriptionTypes(ts transaction.Session) ([]bot_us
 func (r *botUsers) CreateSubscriptionPurchase(ts transaction.Session, param bot_users.Purchase) (int64, error) {
 	sqlQuery := `
 	INSERT INTO bot_users_purchases
-		(sub_id, u_id, p_time, discount, receipt_json, manager_id)
+		(sub_id, u_id, p_time, discount, receipt_json, manager_id, payment_type_id)
 	VALUES
-		(:sub_id, :u_id, :p_time, :discount, :receipt_json, :manager_id)
+		(:sub_id, :u_id, :p_time, :discount, :receipt_json, :manager_id, :payment_type_id)
 	RETURNING p_id
 	`
 
 	return sql_gen.ExecNamedReturnLastInsterted(SqlxTx(ts), sqlQuery, param)
+}
+
+func (r *botUsers) SavePurchaseFileName(ts transaction.Session, pID int, fileName string) error {
+	sqlQuery := `UPDATE bot_users_purchases SET receipt_file_name = $2 WHERE p_id = $1`
+
+	_, err := SqlxTx(ts).Exec(sqlQuery, pID, fileName)
+	return err
 }

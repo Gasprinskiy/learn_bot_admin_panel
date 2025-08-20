@@ -6,6 +6,10 @@ export enum SubscriptionStatus {
   NOTEXISTS = 'not_exists',
 }
 
+export enum PaymentTypeID {
+  P2P = 1,
+}
+
 export interface BotUserProfile {
   u_id: number;
   tg_id: number;
@@ -36,4 +40,23 @@ export interface BotSubscriptionType {
   sub_id: number;
   term_in_month: number;
   price: number;
+}
+
+export interface PurchaseData {
+  p_id: number;
+  sub_id: number;
+  p_time: string;
+  payment_type_id: PaymentTypeID;
+  discount: number | null;
+  manager_id: number | null;
+  subscription_term: number;
+  price: number;
+  receipt_file_name: number | null;
+  subscription_status: SubscriptionStatus;
+  manager_first_name: string | null;
+  manager_last_name: string | null;
+}
+
+export interface BotUserDetailData extends Omit<BotUserProfile, 'subscription_status'> {
+  purchase_data: PurchaseData[] | null;
 }

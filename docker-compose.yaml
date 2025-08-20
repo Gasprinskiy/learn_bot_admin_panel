@@ -4,6 +4,8 @@ services:
     container_name: panel_server
     networks:
       - bot_services
+    volumes:
+      - ./server/uploads:/uploads
     environment:
       TZ: Asia/Tashkent
       POSTGRES_URL: host=postgres user=$POSTGRES_USER password=$POSTGRES_PASSWORD dbname=$POSTGRES_DB port=$POSTGRES_INNER_PORT sslmode=disable
@@ -19,6 +21,9 @@ services:
       GRPC_ADDR: $GRPC_HOST:$GRPC_PORT
     ports:
       - $HTTP_SERVER_PORT:$HTTP_SERVER_PORT
+
+volumes:
+  uploads:
 
 networks:
   bot_services:
