@@ -5,6 +5,7 @@ export interface ProtectedRoute {
   path: string;
   icon: Component;
   text: string;
+  disabled?: boolean;
 }
 
 export interface UseProtectedRoutesState {

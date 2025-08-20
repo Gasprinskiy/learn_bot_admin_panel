@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useProtectedRoutes } from '@/composables/use_protected_routes';
-import { NButton, NIcon } from 'naive-ui';
+import { NButton, NIcon, NTooltip } from 'naive-ui';
 
 const { protecredRoutes } = useProtectedRoutes();
 </script>
@@ -11,10 +11,37 @@ const { protecredRoutes } = useProtectedRoutes();
       <RouterLink
         v-for="route in protecredRoutes"
         :key="route.name"
-        :to="route.path"
+        :to="route.disabled ? '' : route.path"
         class="home-view__route"
       >
+        <NTooltip
+          v-if="route.disabled"
+        >
+          <template #default>
+            Временно не доступно
+          </template>
+
+          <template #trigger>
+            <NButton
+              class="home-view__route-button"
+              type="primary"
+              size="large"
+              tertiary
+              :disabled="true"
+            >
+              <template #icon>
+                <NIcon :component="route.icon" />
+              </template>
+
+              <template #default>
+                {{ route.text }}
+              </template>
+            </NButton>
+          </template>
+        </NTooltip>
+
         <NButton
+          v-else
           class="home-view__route-button"
           type="primary"
           size="large"

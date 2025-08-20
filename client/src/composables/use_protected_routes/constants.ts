@@ -7,6 +7,7 @@ const createProfileRoute: ProtectedRoute = {
   path: '/staff',
   icon: WorkRound,
   text: 'Работники',
+  disabled: true,
 };
 
 const teacherTasksRoute: ProtectedRoute = {
@@ -14,6 +15,7 @@ const teacherTasksRoute: ProtectedRoute = {
   path: '/teacher_tasks',
   icon: BookRound,
   text: 'Домашние задания',
+  disabled: true,
 };
 
 const usersListRoute: ProtectedRoute = {
@@ -28,6 +30,7 @@ const videoContentRoute: ProtectedRoute = {
   path: '/video_content',
   icon: PlayLessonRound,
   text: 'Видео уроки',
+  disabled: true,
 };
 
 export const RoutesByAccessRight: Record<AccessRight, Array<ProtectedRoute>> = {
