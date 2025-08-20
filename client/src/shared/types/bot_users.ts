@@ -51,7 +51,7 @@ export interface PurchaseData {
   manager_id: number | null;
   subscription_term: number;
   price: number;
-  receipt_file_name: number | null;
+  receipt_file_name: string | null;
   subscription_status: SubscriptionStatus;
   manager_first_name: string | null;
   manager_last_name: string | null;

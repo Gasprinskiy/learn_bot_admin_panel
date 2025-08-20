@@ -1,12 +1,14 @@
 <script lang="ts" setup>
 import type { FormValidationStatus, UploadFileInfo } from 'naive-ui';
 import { NButton, NCard, NIcon, NSelect, NText, NUpload, NUploadDragger } from 'naive-ui';
-import type { CreatePurchaseEmits, CreatePurchaseProps } from './types';
-import { computed, shallowRef } from 'vue';
-import type { SelectMixedOption } from 'naive-ui/es/select/src/interface';
 import { ArchiveOutline } from '@vicons/ionicons5';
 import { required } from '@vuelidate/validators';
 import useVuelidate from '@vuelidate/core';
+import { computed, shallowRef } from 'vue';
+import type { SelectMixedOption } from 'naive-ui/es/select/src/interface';
+
+import type { CreatePurchaseEmits, CreatePurchaseProps } from './types';
+
 import { pluralize } from '@/packages/words';
 
 const props = defineProps<CreatePurchaseProps>();

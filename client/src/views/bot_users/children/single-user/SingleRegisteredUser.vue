@@ -194,9 +194,9 @@ onBeforeMount(getUserByID);
               <td>{{ purchase.price - (purchase.discount || 0) }}</td>
             </tr>
 
-            <tr>
+            <tr v-if="purchase.discount">
               <td>Скидка</td>
-              <td>{{ purchase.discount || '-' }}</td>
+              <td>{{ purchase.discount }}</td>
             </tr>
 
             <tr>
@@ -212,7 +212,15 @@ onBeforeMount(getUserByID);
             <tr v-if="purchase.receipt_file_name !== null">
               <td>Квитанция об оплате</td>
               <td>
+                <a
+                  v-if="purchase.receipt_file_name.includes('.pdf')"
+                  :href="`${UploadsURL}/${purchase.receipt_file_name}`"
+                  target="_blank"
+                >
+                  pdf файл
+                </a>
                 <NImage
+                  v-else
                   width="150"
                   :src="`${UploadsURL}/${purchase.receipt_file_name}`"
                   :show-toolbar="false"
