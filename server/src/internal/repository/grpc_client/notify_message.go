@@ -3,7 +3,7 @@ package grpc_client
 import (
 	"context"
 	"learn_bot_admin_panel/internal/repository"
-	"learn_bot_admin_panel/internal/repository/grpc_client/notify_message"
+	"learn_bot_admin_panel/internal/repository/grpc_client/proto/notify_message"
 
 	"google.golang.org/grpc"
 )
