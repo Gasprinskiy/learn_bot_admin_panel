@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NDivider, NImage, NScrollbar, useLoadingBar } from 'naive-ui';
+import { NDivider, NScrollbar, useLoadingBar } from 'naive-ui';
 import { useApiRequestEventBus } from '@/composables/use_api_requests_event_bus';
 import { onMounted, shallowRef } from 'vue';
 import { useRouter } from 'vue-router';

@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -17,6 +18,7 @@ type Config struct {
 	RedisPass    string
 	JwtSecret    string
 	ServerPort   string
+	AllowOrigins []string
 	SSETTL       time.Duration
 	JwtSecretTTL time.Duration
 	RedisTTL     time.Duration
@@ -40,6 +42,18 @@ func NewConfig() *Config {
 		log.Panic("не удалось получить время жизни sse канала: ", err)
 	}
 
+	var allowOrigins []string
+
+	allowOriginsStr := os.Getenv("ALLOW_ORIGINS")
+	if allowOriginsStr == "" {
+		allowOrigins = append(allowOrigins, "*")
+	} else {
+		for _, origin := range strings.Split(allowOriginsStr, ",") {
+			trimed := strings.TrimSpace(origin)
+			allowOrigins = append(allowOrigins, trimed)
+		}
+	}
+
 	return &Config{
 		PostgresURL:  os.Getenv("POSTGRES_URL"),
 		TgApiURL:     os.Getenv("TG_API_URL"),
@@ -47,6 +61,7 @@ func NewConfig() *Config {
 		RedisPass:    os.Getenv("REDIS_PASSWORD"),
 		JwtSecret:    os.Getenv("JWT_SECRET"),
 		GRPCAddr:     os.Getenv("GRPC_ADDR"),
+		AllowOrigins: allowOrigins,
 		ServerPort:   fmt.Sprintf(":%s", os.Getenv("HTTP_SERVER_PORT")),
 		RedisAddr:    fmt.Sprintf("redis:%s", os.Getenv("REDIS_PORT")),
 		RedisTTL:     time.Minute * time.Duration(redisTtl),
