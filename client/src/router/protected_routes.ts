@@ -38,21 +38,21 @@ const createProfileRoute: ReadonlyRecordRaw = {
   },
 };
 
-const teacherTasksRoute: ReadonlyRecordRaw = {
-  name: 'teacher_tasks',
-  path: '/teacher_tasks',
-  meta: {
-    relatedToAccessRights: true,
-    accessRights: {
-      [AccessRight.AccessRightFull]: true,
-      [AccessRight.AccessRightManager]: true,
-      [AccessRight.AccessRightTeacher]: true,
-    },
-  },
-  component: () => {
-    return import('@/views/teacher_tasks/TeacherTaskView.vue');
-  },
-};
+// const teacherTasksRoute: ReadonlyRecordRaw = {
+//   name: 'teacher_tasks',
+//   path: '/teacher_tasks',
+//   meta: {
+//     relatedToAccessRights: true,
+//     accessRights: {
+//       [AccessRight.AccessRightFull]: true,
+//       [AccessRight.AccessRightManager]: true,
+//       [AccessRight.AccessRightTeacher]: true,
+//     },
+//   },
+//   component: () => {
+//     return import('@/views/teacher_tasks/TeacherTaskView.vue');
+//   },
+// };
 
 const usersListRoute: ReadonlyRecordRaw = {
   name: 'bot_users',
@@ -92,21 +92,21 @@ const usersListRoute: ReadonlyRecordRaw = {
   ],
 };
 
-const videoContentRoute: ReadonlyRecordRaw = {
-  name: 'video_content',
-  path: '/video_content',
-  meta: {
-    relatedToAccessRights: true,
-    accessRights: {
-      [AccessRight.AccessRightFull]: true,
-      [AccessRight.AccessRightManager]: true,
-      [AccessRight.AccessRightTeacher]: true,
-    },
-  },
-  component: () => {
-    return import('@/views/video_content/VideoContent.vue');
-  },
-};
+// const videoContentRoute: ReadonlyRecordRaw = {
+//   name: 'video_content',
+//   path: '/video_content',
+//   meta: {
+//     relatedToAccessRights: true,
+//     accessRights: {
+//       [AccessRight.AccessRightFull]: true,
+//       [AccessRight.AccessRightManager]: true,
+//       [AccessRight.AccessRightTeacher]: true,
+//     },
+//   },
+//   component: () => {
+//     return import('@/views/video_content/VideoContent.vue');
+//   },
+// };
 //
 export const DefaultRoutes: ReadonlyRecordRaw[] = [
   homeRoute,
@@ -116,19 +116,19 @@ export const DefaultRoutes: ReadonlyRecordRaw[] = [
 export const RoutesByAccessRightList: ReadonlyRoutesByAccessRight = {
   [AccessRight.AccessRightFull]: [
     createProfileRoute,
-    teacherTasksRoute,
+    // teacherTasksRoute,
     usersListRoute,
-    videoContentRoute,
+    // videoContentRoute,
   ],
 
   [AccessRight.AccessRightManager]: [
-    teacherTasksRoute,
+    // teacherTasksRoute,
     usersListRoute,
-    videoContentRoute,
+    // videoContentRoute,
   ],
 
   [AccessRight.AccessRightTeacher]: [
-    videoContentRoute,
-    teacherTasksRoute,
+    // videoContentRoute,
+    // teacherTasksRoute,
   ],
 };
