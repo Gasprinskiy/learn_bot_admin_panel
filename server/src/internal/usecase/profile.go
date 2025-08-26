@@ -118,6 +118,13 @@ func (u *Profile) TgAuthVerifyAnswer(ctx context.Context, userName, tempID strin
 	user, err := u.ri.Repository.Profile.FindProfileByTGUserNameOrID(ts, userName, TGID)
 	switch err {
 	case nil:
+		if !user.IsActivated() {
+			if err = u.ri.Repository.Profile.SetProfileTGID(ts, user.ID, TGID); err != nil {
+				u.log.Db.Errorln(u.logPrefix(), "не удалось обновить telegram_id пользователя: ", err)
+				return message, global.ErrInternalError
+			}
+		}
+
 	case global.ErrNoData:
 		chanel.Error = err
 		err = global.ErrNoData
@@ -126,13 +133,6 @@ func (u *Profile) TgAuthVerifyAnswer(ctx context.Context, userName, tempID strin
 		u.log.Db.Errorln(u.logPrefix(), "не удалось найти пользователя по юзернейму в телеграм: ", err)
 		chanel.Error = global.ErrInternalError
 		err = global.ErrInternalError
-	}
-
-	if !user.IsActivated() {
-		if err = u.ri.Repository.Profile.SetProfileTGID(ts, user.ID, TGID); err != nil {
-			u.log.Db.Errorln(u.logPrefix(), "не удалось обновить telegram_id пользователя: ", err)
-			return message, global.ErrInternalError
-		}
 	}
 
 	chanel.Data = user
