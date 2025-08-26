@@ -311,9 +311,9 @@ func (h *ProfileHandler) LogOut(gctx *gin.Context) {
 
 func (h *ProfileHandler) setAccessToken(gctx *gin.Context, token string) {
 	lifeTime := int(h.config.JwtSecretTTL.Milliseconds())
-	gctx.SetCookie("access_token", token, lifeTime, "/", "admin-panel.local", false, true)
+	gctx.SetCookie("access_token", token, lifeTime, "/", h.config.ServerDomain, false, true)
 }
 
 func (h *ProfileHandler) removeAccessToken(gctx *gin.Context, token string) {
-	gctx.SetCookie("access_token", token, -1, "/", "admin-panel.local", false, true)
+	gctx.SetCookie("access_token", token, -1, "/", h.config.ServerDomain, false, true)
 }

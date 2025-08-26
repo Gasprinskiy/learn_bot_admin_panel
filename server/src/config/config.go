@@ -18,6 +18,7 @@ type Config struct {
 	RedisPass    string
 	JwtSecret    string
 	ServerPort   string
+	ServerDomain string
 	AllowOrigins []string
 	SSETTL       time.Duration
 	JwtSecretTTL time.Duration
@@ -61,6 +62,7 @@ func NewConfig() *Config {
 		RedisPass:    os.Getenv("REDIS_PASSWORD"),
 		JwtSecret:    os.Getenv("JWT_SECRET"),
 		GRPCAddr:     os.Getenv("GRPC_ADDR"),
+		ServerDomain: os.Getenv("DOMAIN"),
 		AllowOrigins: allowOrigins,
 		ServerPort:   fmt.Sprintf(":%s", os.Getenv("HTTP_SERVER_PORT")),
 		RedisAddr:    fmt.Sprintf("redis:%s", os.Getenv("REDIS_PORT")),
