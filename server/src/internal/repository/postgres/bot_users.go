@@ -65,11 +65,12 @@ func (r *botUsers) FindBotRegisteredUsers(ts transaction.Session, param bot_user
 				bst.term_in_month
 			FROM bot_users_profile bu
 				LEFT JOIN LATERAL (
-					SELECT bp.*
+					SELECT bp.sub_id, bp.p_time
 					FROM bot_users_purchases bp
+					WHERE bp.u_id = bu.u_id
 					ORDER BY bp.p_id DESC
 					LIMIT 1
-				) bp ON (bp.u_id = bu.u_id)
+				) bp ON TRUE
 				LEFT JOIN bot_subscription_types bst ON (bst.sub_id = bp.sub_id)
 			%s
 			%s
