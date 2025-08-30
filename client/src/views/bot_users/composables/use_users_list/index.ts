@@ -1,5 +1,6 @@
 import { useMessage } from 'naive-ui';
 import { computed, shallowReactive, shallowRef } from 'vue';
+import { useRoute } from 'vue-router';
 
 import $api from '@/packages/api/client';
 import type { PaginationParams } from '@/shared/types/common';
@@ -9,6 +10,7 @@ import { ErrorMessagesByCode } from './constants';
 
 export function useUsersList() {
   const message = useMessage();
+  const route = useRoute();
 
   const data = shallowRef<BotUserProfile[]>([]);
   const isLoadingMore = shallowRef<boolean>(false);
@@ -23,6 +25,7 @@ export function useUsersList() {
   const noData = computed<boolean>(() => data.value.length === 0);
   const isDataLeft = computed<boolean>(() => leftDataCount.value > 0);
   const showLoadMoreButton = computed<boolean>(() => !noData.value && isDataLeft.value);
+  const currentMode = computed<string>(() => route.name?.toString() || 'registered');
 
   function resetSearchParams() {
     for (const key in searchParams) {
@@ -36,7 +39,7 @@ export function useUsersList() {
     pagidationParams.next_cursor_id = undefined;
   }
 
-  async function fetchRegisteredUsers(reset?: boolean) {
+  async function fetchUsers(reset?: boolean) {
     const isReset = reset !== undefined && reset === true;
 
     if (isReset) {
@@ -45,7 +48,7 @@ export function useUsersList() {
     }
 
     try {
-      const response = await $api<BotUserProfileListResponse>('/bot_users', {
+      const response = await $api<BotUserProfileListResponse>(`/bot_users/${currentMode.value}`, {
         params: {
           ...searchParams,
           ...pagidationParams,
@@ -89,9 +92,9 @@ export function useUsersList() {
     window.URL.revokeObjectURL(url);
   }
 
-  async function printRegisteredUsers() {
+  async function printUsers() {
     try {
-      const response = await $api<Blob>('/bot_users/excel_file', {
+      const response = await $api<Blob>(`/bot_users/${currentMode.value}/excel_file`, {
         params: {
           ...searchParams,
         },
@@ -104,7 +107,7 @@ export function useUsersList() {
     }
   }
 
-  async function loadMoreRegisteredUsers() {
+  async function loadMoreUsers() {
     if (isLoadingMore.value) {
       return;
     }
@@ -114,7 +117,7 @@ export function useUsersList() {
     isLoadingMore.value = true;
 
     try {
-      await fetchRegisteredUsers();
+      await fetchUsers();
     } finally {
       isLoadingMore.value = false;
     }
@@ -128,9 +131,9 @@ export function useUsersList() {
     showLoadMoreButton,
     isDataLeft,
     isLoadingMore,
-    fetchRegisteredUsers,
-    loadMoreRegisteredUsers,
+    fetchUsers,
+    loadMoreUsers,
     resetSearchParams,
-    printRegisteredUsers,
+    printUsers,
   };
 }

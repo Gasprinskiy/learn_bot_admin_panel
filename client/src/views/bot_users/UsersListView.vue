@@ -37,7 +37,7 @@ const isSingleUser = computed<boolean>(() => route.name === 'registered-user');
           type="segment"
         >
           <NTabPane tab="Зарегистрированные" :name="UserListTab.REGISTERED" />
-          <NTabPane tab="Не зарегистрированные (в разработке)" :name="UserListTab.UNREGISTERED" disabled />
+          <NTabPane tab="Не зарегистрированные" :name="UserListTab.UNREGISTERED" />
         </NTabs>
       </div>
 

@@ -39,6 +39,17 @@ func (b *BotUserProfile) SetSubscriptionStatus(value SubscriptionStatus) {
 	b.SubscrStatus = value
 }
 
+type BotUnregistredUserProfile struct {
+	UID              int64               `db:"u_id" json:"u_id"`
+	TgID             int64               `db:"tg_id" json:"tg_id"`
+	TgUserName       string              `db:"tg_user_name" json:"tg_user_name" excel_head:"Юзернейм" excel_cell:"string"`
+	FirstName        sql_null.NullString `db:"first_name" json:"first_name" excel_head:"Имя" excel_cell:"sql_null_string"`
+	LastName         sql_null.NullString `db:"last_name" json:"last_name" excel_head:"Фамилия" excel_cell:"sql_null_string"`
+	BirthDate        sql_null.NullTime   `db:"birth_date" json:"birth_date" excel_head:"Дата рождения" excel_cell:"sql_null_time"`
+	JoinDate         time.Time           `db:"join_date" json:"join_date" excel_head:"Дата вступления" excel_cell:"date"`
+	CommonTotalCount int                 `db:"total_count" json:"-"`
+}
+
 type BotSubscriptionType struct {
 	SubID       int     `db:"sub_id" json:"sub_id"`
 	TermInMonth int     `db:"term_in_month" json:"term_in_month"`

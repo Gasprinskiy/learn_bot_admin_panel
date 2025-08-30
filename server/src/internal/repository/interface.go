@@ -20,6 +20,7 @@ type Profile interface {
 
 type BotUsers interface {
 	FindBotRegisteredUsers(ts transaction.Session, param bot_users.FindBotRegisteredUsersInnerParam) ([]bot_users.BotUserProfile, error)
+	FindBotUnregisteredUsers(ts transaction.Session, param bot_users.FindBotUnregisteredUsersInnerParam) ([]bot_users.BotUnregistredUserProfile, error)
 	FindUserByID(ts transaction.Session, id int) (bot_users.BotUserCommonData, error)
 	LoadAllBotSubscriptionTypes(ts transaction.Session) ([]bot_users.BotSubscriptionType, error)
 	CreateSubscriptionPurchase(ts transaction.Session, param bot_users.Purchase) (int64, error)

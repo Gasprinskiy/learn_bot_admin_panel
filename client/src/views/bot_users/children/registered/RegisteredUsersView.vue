@@ -18,10 +18,10 @@ const {
   showLoadMoreButton,
   isDataLeft,
   isLoadingMore,
-  fetchRegisteredUsers,
-  loadMoreRegisteredUsers,
+  fetchUsers,
+  loadMoreUsers,
   resetSearchParams,
-  printRegisteredUsers,
+  printUsers,
 } = useUsersList();
 
 const searchQuery = computed<string>({
@@ -109,7 +109,7 @@ const ageTill = computed<number | null>({
 
 async function onReset() {
   resetSearchParams();
-  await fetchRegisteredUsers(true);
+  await fetchUsers(true);
 }
 
 async function navigateToUser(id: number) {
@@ -121,14 +121,14 @@ async function navigateToUser(id: number) {
   });
 }
 
-onBeforeMount(fetchRegisteredUsers);
+onBeforeMount(fetchUsers);
 </script>
 
 <template>
   <div class="registered-users-view">
     <form
       class="registered-users-view__filters"
-      @submit.prevent="fetchRegisteredUsers(true)"
+      @submit.prevent="fetchUsers(true)"
     >
       <div class="registered-users-view__filters_fileds">
         <div
@@ -219,7 +219,7 @@ onBeforeMount(fetchRegisteredUsers);
           <template #trigger>
             <NButton
               type="info"
-              @click="printRegisteredUsers"
+              @click="printUsers"
             >
               <template #icon>
                 <NIcon
@@ -283,7 +283,7 @@ onBeforeMount(fetchRegisteredUsers);
           :disabled="!isDataLeft || isLoadingMore"
           :loading="isLoadingMore"
           type="primary"
-          @click="loadMoreRegisteredUsers"
+          @click="loadMoreUsers"
         >
           Загрузить еще
         </NButton>

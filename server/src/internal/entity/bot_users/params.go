@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-type FindBotRegisteredUsersQuertParseParam struct {
+type FindBotRegisteredUsersQueryParseParam struct {
 	Limit              int       `form:"limit"`
 	PageCount          int       `form:"page"`
 	Query              string    `form:"query"`
@@ -23,7 +23,7 @@ type FindBotRegisteredUsersQuertParseParam struct {
 	SubscriptionStatus string    `form:"subscription_status"`
 }
 
-func (fp FindBotRegisteredUsersQuertParseParam) InnerParam() FindBotRegisteredUsersInnerParam {
+func (fp FindBotRegisteredUsersQueryParseParam) InnerParam() FindBotRegisteredUsersInnerParam {
 	var (
 		query          sql_null.NullString
 		nextCursorDate sql_null.NullTime
@@ -85,6 +85,35 @@ func (fp FindBotRegisteredUsersQuertParseParam) InnerParam() FindBotRegisteredUs
 	}
 }
 
+type FindBotUnregisteredUsersQueryParseParam struct {
+	Limit          int       `form:"limit"`
+	PageCount      int       `form:"page"`
+	NextCursorID   int       `form:"next_cursor_id"`
+	NextCursorDate time.Time `form:"next_cursor_date"`
+}
+
+func (fp FindBotUnregisteredUsersQueryParseParam) InnerParam() FindBotUnregisteredUsersInnerParam {
+	var (
+		nextCursorDate sql_null.NullTime
+		nextCursorID   sql_null.NullInt64
+	)
+
+	if !fp.NextCursorDate.IsZero() {
+		nextCursorDate = sql_null.NewNullTime(fp.NextCursorDate)
+	}
+
+	if fp.NextCursorID > 0 {
+		nextCursorID = sql_null.NewInt64(fp.NextCursorID)
+	}
+
+	return FindBotUnregisteredUsersInnerParam{
+		Limit:          fp.Limit,
+		PageCount:      fp.PageCount,
+		NextCursorDate: nextCursorDate,
+		NextCursorID:   nextCursorID,
+	}
+}
+
 type FindBotRegisteredUsersInnerParam struct {
 	Limit              int `db:"limit"`
 	PageCount          int
@@ -96,6 +125,13 @@ type FindBotRegisteredUsersInnerParam struct {
 	JoinDateFrom       sql_null.NullTime   `db:"join_date_from"`
 	JoinDateTill       sql_null.NullTime   `db:"join_date_till"`
 	SubscriptionStatus gennull.GenericNull[SubscriptionStatus]
+}
+
+type FindBotUnregisteredUsersInnerParam struct {
+	Limit          int `db:"limit"`
+	PageCount      int
+	NextCursorDate sql_null.NullTime  `db:"next_cursor_date"`
+	NextCursorID   sql_null.NullInt64 `db:"next_cursor_id"`
 }
 
 type PurchaseSubscriptionFile struct {

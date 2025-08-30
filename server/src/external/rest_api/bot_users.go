@@ -49,17 +49,31 @@ func NewBotUsersHandler(
 
 	{
 		group.GET(
-			"",
+			"/registered",
 			handler.middleware.CheckAccesToken(),
 			handler.middleware.CheckAccessRight([]profile.AccessRight{profile.AccessRightFull, profile.AccessRightManager}),
 			handler.GetBotUsers,
 		)
 
 		group.GET(
-			"/excel_file",
+			"/unregistered",
+			handler.middleware.CheckAccesToken(),
+			handler.middleware.CheckAccessRight([]profile.AccessRight{profile.AccessRightFull, profile.AccessRightManager}),
+			handler.GetUnregisteredBotUsers,
+		)
+
+		group.GET(
+			"/registered/excel_file",
 			handler.middleware.CheckAccesToken(),
 			handler.middleware.CheckAccessRight([]profile.AccessRight{profile.AccessRightFull, profile.AccessRightManager}),
 			handler.GetBotUsersExcelFile,
+		)
+
+		group.GET(
+			"/unregistered/excel_file",
+			handler.middleware.CheckAccesToken(),
+			handler.middleware.CheckAccessRight([]profile.AccessRight{profile.AccessRightFull, profile.AccessRightManager}),
+			handler.GetBotUnregisteredUsersExcelFile,
 		)
 
 		group.GET(
@@ -86,7 +100,7 @@ func NewBotUsersHandler(
 }
 
 func (h *BotUsersHandler) GetBotUsers(gctx *gin.Context) {
-	var param bot_users.FindBotRegisteredUsersQuertParseParam
+	var param bot_users.FindBotRegisteredUsersQueryParseParam
 
 	if err := gctx.ShouldBindQuery(&param); err != nil {
 		gin_gen.HandleError(gctx, global.ErrInvalidParam)
@@ -110,8 +124,33 @@ func (h *BotUsersHandler) GetBotUsers(gctx *gin.Context) {
 	gctx.JSON(http.StatusOK, data)
 }
 
+func (h *BotUsersHandler) GetUnregisteredBotUsers(gctx *gin.Context) {
+	var param bot_users.FindBotUnregisteredUsersQueryParseParam
+
+	if err := gctx.ShouldBindQuery(&param); err != nil {
+		gin_gen.HandleError(gctx, global.ErrInvalidParam)
+		return
+	}
+
+	data, err := transaction.RunInTx(
+		gctx,
+		h.log,
+		h.sm,
+		func(ctx context.Context) (global.CommotListSearchResponse[bot_users.BotUnregistredUserProfile], error) {
+			return h.ui.Usecase.BotUsers.FindUnregisteredUsers(ctx, param.InnerParam())
+		},
+	)
+
+	if err != nil {
+		gin_gen.HandleError(gctx, err)
+		return
+	}
+
+	gctx.JSON(http.StatusOK, data)
+}
+
 func (h *BotUsersHandler) GetBotUsersExcelFile(gctx *gin.Context) {
-	var param bot_users.FindBotRegisteredUsersQuertParseParam
+	var param bot_users.FindBotRegisteredUsersQueryParseParam
 
 	if err := gctx.ShouldBindQuery(&param); err != nil {
 		gin_gen.HandleError(gctx, global.ErrInvalidParam)
@@ -124,6 +163,35 @@ func (h *BotUsersHandler) GetBotUsersExcelFile(gctx *gin.Context) {
 		h.sm,
 		func(ctx context.Context) ([]byte, error) {
 			return h.ui.Usecase.BotUsers.PrintFindRegisteredUsers(ctx, param.InnerParam())
+		},
+	)
+
+	if err != nil {
+		gin_gen.HandleError(gctx, err)
+		return
+	}
+
+	gctx.Header("Content-Description", "File Transfer")
+	gctx.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s", "bot_users.xlsx"))
+	gctx.Header("Content-Length", strconv.Itoa(len(data)))
+
+	gctx.Data(http.StatusOK, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", data)
+}
+
+func (h *BotUsersHandler) GetBotUnregisteredUsersExcelFile(gctx *gin.Context) {
+	var param bot_users.FindBotUnregisteredUsersQueryParseParam
+
+	if err := gctx.ShouldBindQuery(&param); err != nil {
+		gin_gen.HandleError(gctx, global.ErrInvalidParam)
+		return
+	}
+
+	data, err := transaction.RunInTx(
+		gctx,
+		h.log,
+		h.sm,
+		func(ctx context.Context) ([]byte, error) {
+			return h.ui.Usecase.BotUsers.PrintFindUnregisteredUsers(ctx, param.InnerParam())
 		},
 	)
 

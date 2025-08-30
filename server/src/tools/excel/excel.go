@@ -2,6 +2,7 @@ package excel
 
 import (
 	"fmt"
+	"learn_bot_admin_panel/tools/sql_null"
 	"reflect"
 	"time"
 	"unicode/utf8"
@@ -12,10 +13,12 @@ import (
 type CellType string
 
 const (
-	CellTypeString CellType = "string"
-	CellTypeInt    CellType = "int"
-	CellTypeDate   CellType = "date"
-	CellTypeBool   CellType = "bool"
+	CellTypeString        CellType = "string"
+	CellTypeInt           CellType = "int"
+	CellTypeDate          CellType = "date"
+	CellTypeBool          CellType = "bool"
+	CellTypeSqlNullString CellType = "sql_null_string"
+	CellTypeSqlNullTime   CellType = "sql_null_time"
 )
 
 var SetCellByTypeMap = map[CellType]func(cell *xlsx.Cell, value reflect.Value){
@@ -38,6 +41,22 @@ var SetCellByTypeMap = map[CellType]func(cell *xlsx.Cell, value reflect.Value){
 		}
 
 		cell.SetString(localizedVal)
+	},
+
+	CellTypeSqlNullString: func(cell *xlsx.Cell, value reflect.Value) {
+		typeVal := value.Interface().(sql_null.NullString)
+		cell.SetString(typeVal.OptionalResult())
+	},
+
+	CellTypeSqlNullTime: func(cell *xlsx.Cell, value reflect.Value) {
+		typeVal := value.Interface().(sql_null.NullTime)
+
+		if typeVal.Valid {
+			cell.SetDate(typeVal.Time)
+			return
+		}
+
+		cell.SetString("-")
 	},
 }
 

@@ -51,7 +51,7 @@ func (u *BotUsers) PrintFindRegisteredUsers(
 		return nil, err
 	}
 
-	file, err := excel.BuildExcelFileFromStruct(data.Data, "Пользователи бота")
+	file, err := excel.BuildExcelFileFromStruct(data.Data, "Зарегестрированные")
 	if err != nil {
 		u.log.Db.Errorln(u.logPrefix(), "не удалось создать файл пользователей бота:", err)
 		return nil, global.ErrInternalError
@@ -91,6 +91,54 @@ func (u *BotUsers) FindRegisteredUsers(
 		user.SetSubscriptionStatus(u.getUserSubscriptionStatus(user.SubscrPurchaseDate, user.SubscrTerm.GetInt()))
 		result.Data[i] = user
 	}
+
+	return result, nil
+}
+
+func (u *BotUsers) PrintFindUnregisteredUsers(
+	ctx context.Context,
+	param bot_users.FindBotUnregisteredUsersInnerParam,
+) ([]byte, error) {
+	data, err := u.FindUnregisteredUsers(ctx, param)
+	if err != nil {
+		return nil, err
+	}
+
+	file, err := excel.BuildExcelFileFromStruct(data.Data, "Не зарегестрированные")
+	if err != nil {
+		u.log.Db.Errorln(u.logPrefix(), "не удалось создать файл пользователей бота:", err)
+		return nil, global.ErrInternalError
+	}
+
+	var b bytes.Buffer
+	writer := bufio.NewWriter(&b)
+	if err := file.Write(writer); err != nil {
+		u.log.Db.Errorln("не удалось записать файл в буффер, ошибка: ", err)
+		return nil, global.ErrInternalError
+	}
+	return b.Bytes(), nil
+}
+
+func (u *BotUsers) FindUnregisteredUsers(
+	ctx context.Context,
+	param bot_users.FindBotUnregisteredUsersInnerParam,
+) (global.CommotListSearchResponse[bot_users.BotUnregistredUserProfile], error) {
+	var zero global.CommotListSearchResponse[bot_users.BotUnregistredUserProfile]
+
+	ts := transaction.MustGetSession(ctx)
+
+	data, err := u.ri.Repository.BotUsers.FindBotUnregisteredUsers(ts, param)
+	switch err {
+	case nil:
+	case global.ErrNoData:
+		return zero, err
+
+	default:
+		u.log.Db.Errorln(u.logPrefix(), "не удалось найти не зарегестрированных в боте пользователей:", err)
+		return zero, global.ErrInternalError
+	}
+
+	result := global.NewCommotListSearchResponse(data, data[0].CommonTotalCount, param.Limit, param.PageCount)
 
 	return result, nil
 }

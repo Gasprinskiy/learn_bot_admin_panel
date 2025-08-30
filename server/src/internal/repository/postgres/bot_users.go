@@ -160,6 +160,60 @@ func (r *botUsers) FindBotRegisteredUsers(ts transaction.Session, param bot_user
 	return sql_gen.SelectNamedStruct[bot_users.BotUserProfile](SqlxTx(ts), sqlQuery, param)
 }
 
+func (r *botUsers) FindBotUnregisteredUsers(ts transaction.Session, param bot_users.FindBotUnregisteredUsersInnerParam) ([]bot_users.BotUnregistredUserProfile, error) {
+	sqlQuery := `
+		WITH filtered AS (
+			SELECT
+				bu.u_id,
+				bu.tg_id,
+				bu.tg_user_name,
+				bu.first_name,
+				bu.last_name,
+				bu.birth_date,
+				bu.join_date
+			FROM bot_users_to_register bu
+			WHERE bu.registered = false
+		)
+		SELECT
+			data.u_id,
+			data.tg_id,
+			data.tg_user_name,
+			data.first_name,
+			data.last_name,
+			data.birth_date,
+			data.join_date,
+			(SELECT COUNT(*) FROM filtered) AS total_count
+		FROM (
+			SELECT
+				f.u_id,
+				f.tg_id,
+				f.tg_user_name,
+				f.first_name,
+				f.last_name,
+				f.birth_date,
+				f.join_date
+			FROM filtered f
+			%s
+			ORDER BY join_date DESC, u_id DESC
+			%s
+		) AS data
+	`
+
+	sqlQuery = fmt.Sprintf(sqlQuery, paginationMark, limitMark)
+
+	if param.NextCursorDate.Valid && param.NextCursorID.Valid {
+		paginationQuery := `WHERE	(f.join_date, f.u_id) < (:next_cursor_date, :next_cursor_id)`
+
+		sqlQuery = strings.Replace(sqlQuery, paginationMark, paginationQuery, 1)
+	}
+
+	if param.Limit > 0 {
+		sqlQuery = strings.Replace(sqlQuery, limitMark, "LIMIT :limit", 1)
+	}
+
+	return sql_gen.SelectNamedStruct[bot_users.BotUnregistredUserProfile](SqlxTx(ts), sqlQuery, param)
+}
+
 func (r *botUsers) FindUserByID(ts transaction.Session, id int) (bot_users.BotUserCommonData, error) {
 	sqlQuery := `
 		SELECT

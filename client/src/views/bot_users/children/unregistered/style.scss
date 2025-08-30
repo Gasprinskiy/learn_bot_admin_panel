@@ -1,0 +1,28 @@
+.unregistered-users-view {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  &__filters {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    justify-content: end;
+    width: 100%;
+  }
+
+  &__list_bottom {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    padding: 15px 0;
+  }
+
+  &__table-item {
+    cursor: pointer;
+
+    &:hover {
+      opacity: 0.8;
+    }
+  }
+}
