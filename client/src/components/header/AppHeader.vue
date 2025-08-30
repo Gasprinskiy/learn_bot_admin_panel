@@ -44,13 +44,13 @@ function renderVisualModeOptionIcon(value: VisualMode): VNodeChild | undefined {
       <div class="app-header__logo">
         <RouterLink v-if="isAuthorized" to="/">
           <img
-            src="@/assets/vue.svg"
+            src="@/assets/logo.png"
             alt="Logo"
           >
         </RouterLink>
         <img
           v-else
-          src="@/assets/vue.svg"
+          src="@/assets/logo.png"
           alt="Logo"
         >
       </div>
