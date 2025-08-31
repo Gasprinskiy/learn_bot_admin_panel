@@ -18,7 +18,7 @@ const { protecredRoutes } = useProtectedRoutes();
           v-if="route.disabled"
         >
           <template #default>
-            Временно не доступно
+            Нет доступа
           </template>
 
           <template #trigger>

@@ -63,6 +63,15 @@ func (u *Jwt) ParseToken(tokenString string) (app_jwt.Claims, error) {
 	}
 
 	if claims, ok := token.Claims.(*app_jwt.Claims); ok && token.Valid {
+		deleted, err := u.ri.AuthCache.InUserDeletedCache(context.Background(), claims.UserID)
+		if err != nil {
+			return zero, global.ErrInternalError
+		}
+
+		if deleted {
+			return zero, global.ErrPermissionDenied
+		}
+
 		return *claims, nil
 	}
 

@@ -7,7 +7,8 @@ const createProfileRoute: ProtectedRoute = {
   path: '/staff',
   icon: WorkRound,
   text: 'Работники',
-  // disabled: true,
+  access_rights: [AccessRight.AccessRightFull],
+  disabled: false,
 };
 
 // const teacherTasksRoute: ProtectedRoute = {
@@ -23,6 +24,8 @@ const usersListRoute: ProtectedRoute = {
   path: '/bot_users/registered',
   icon: SupervisedUserCircleRound,
   text: 'Пользователи',
+  access_rights: [AccessRight.AccessRightFull, AccessRight.AccessRightManager],
+  disabled: false,
 };
 
 // const videoContentRoute: ProtectedRoute = {
@@ -33,8 +36,4 @@ const usersListRoute: ProtectedRoute = {
 //   disabled: true,
 // };
 
-export const RoutesByAccessRight: Record<AccessRight, Array<ProtectedRoute>> = {
-  [AccessRight.AccessRightFull]: [createProfileRoute, usersListRoute], // , videoContentRoute, teacherTasksRoute],
-  [AccessRight.AccessRightManager]: [usersListRoute], // videoContentRoute, teacherTasksRoute],
-  [AccessRight.AccessRightTeacher]: [],
-};
+export const ProtectedRoutes: Array<ProtectedRoute> = [createProfileRoute, usersListRoute];

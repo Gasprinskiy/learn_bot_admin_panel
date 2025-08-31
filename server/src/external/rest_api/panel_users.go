@@ -12,6 +12,7 @@ import (
 	"learn_bot_admin_panel/tools/logger"
 	"learn_bot_admin_panel/uimport"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -64,6 +65,13 @@ func NewPanelUsersHandler(
 			handler.middleware.CheckAccesToken(),
 			handler.middleware.CheckAccessRight([]profile.AccessRight{profile.AccessRightFull}),
 			handler.RedactProfile,
+		)
+
+		group.DELETE(
+			"/delete/:user_id",
+			handler.middleware.CheckAccesToken(),
+			handler.middleware.CheckAccessRight([]profile.AccessRight{profile.AccessRightFull}),
+			handler.DeleteProfile,
 		)
 	}
 }
@@ -137,6 +145,30 @@ func (h *PanelUsersHandler) RedactProfile(gctx *gin.Context) {
 		h.sm,
 		func(ctx context.Context) error {
 			return h.ui.Usecase.Profile.RedactProfile(ctx, param)
+		},
+	)
+
+	if err != nil {
+		gin_gen.HandleError(gctx, err)
+		return
+	}
+
+	gctx.JSON(http.StatusOK, gin.H{"success": true})
+}
+
+func (h *PanelUsersHandler) DeleteProfile(gctx *gin.Context) {
+	userID, err := strconv.Atoi(gctx.Param("user_id"))
+	if err != nil {
+		gin_gen.HandleError(gctx, global.ErrInvalidParam)
+		return
+	}
+
+	err = transaction.RunInTxExec(
+		gctx,
+		h.log,
+		h.sm,
+		func(ctx context.Context) error {
+			return h.ui.Usecase.Profile.DeleteProfile(ctx, userID)
 		},
 	)
 

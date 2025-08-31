@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { NButton, NDivider, NIcon, NTable, NTag, NTooltip, useMessage } from 'naive-ui';
-import { defineAsyncComponent, onBeforeMount, shallowRef } from 'vue';
+import { NButton, NDivider, NIcon, NPopconfirm, NTable, NTag, NTooltip, useMessage } from 'naive-ui';
+import { computed, defineAsyncComponent, onBeforeMount, shallowRef } from 'vue';
 import { dateToRuLocaleString } from '@/packages/chronos';
 import { optionalResult } from '@/packages/words';
-import { AddOutline, Pencil } from '@vicons/ionicons5';
+import { AddOutline, Pencil, TrashBin } from '@vicons/ionicons5';
 
 import $api from '@/packages/api/client';
 import { AccessRight } from '@/shared/types/profile';
@@ -19,6 +19,8 @@ const { showModal, closeModal } = useModal();
 
 const data = shallowRef<UserStaffInfo[]>([]);
 const redactingProfile = shallowRef<UserStaffInfo | null>(null);
+
+const isRedactMode = computed<boolean>(() => redactingProfile.value !== null);
 
 function openCreateRedactModal(redactInfo?: UserStaffInfo) {
   redactingProfile.value = redactInfo || null;
@@ -50,13 +52,27 @@ async function onSubmitProfileForm(state: ProfileFormState) {
   };
 
   try {
-    const path = redactingProfile.value !== null ? '/panel_users/redact' : '/panel_users/create';
-    const method = redactingProfile.value !== null ? 'PATCH' : 'POST';
+    const path = isRedactMode.value ? '/panel_users/redact' : '/panel_users/create';
+    const method = isRedactMode.value ? 'PATCH' : 'POST';
 
     await $api(path, { method, params });
     await fetchStaffList();
 
     closeModal();
+    message.success(isRedactMode.value ? 'Пользовтель отредактирован' : 'Пользователь добавлен');
+  } catch (e) {
+    const stauts = +(e as any).status || 500;
+    message.error(StaffListErrorsMap[stauts]);
+  }
+}
+
+async function deleteProfile(id: number) {
+  try {
+    await $api(`/panel_users/delete/${id}`, {
+      method: 'DELETE',
+    });
+
+    message.warning('Пользователь удален');
   } catch (e) {
     const stauts = +(e as any).status || 500;
     message.error(StaffListErrorsMap[stauts]);
@@ -129,7 +145,7 @@ onBeforeMount(fetchStaffList);
             <td>{{ user.tg_user_name }}</td>
             <td>{{ AccesRightTitleMap[user.access_right] }}</td>
             <td>{{ optionalResult(user.last_login!, dateToRuLocaleString) }}</td>
-            <td>
+            <td class="staff-view__table-actions">
               <NTag
                 v-if="user.is_you"
                 type="primary"
@@ -138,24 +154,56 @@ onBeforeMount(fetchStaffList);
                 Вы
               </NTag>
 
-              <NTooltip v-else>
-                <template #default>
-                  Редактировать
-                </template>
+              <template v-else>
+                <NTooltip>
+                  <template #default>
+                    Редактировать
+                  </template>
 
-                <template #trigger>
-                  <NButton
-                    type="primary"
-                    @click="openCreateRedactModal(user)"
-                  >
-                    <template #icon>
-                      <NIcon
-                        :component="Pencil"
-                      />
-                    </template>
-                  </NButton>
-                </template>
-              </NTooltip>
+                  <template #trigger>
+                    <NButton
+                      type="primary"
+                      @click="openCreateRedactModal(user)"
+                    >
+                      <template #icon>
+                        <NIcon
+                          :component="Pencil"
+                        />
+                      </template>
+                    </NButton>
+                  </template>
+                </NTooltip>
+
+                <NTooltip>
+                  <template #default>
+                    Удалить
+                  </template>
+
+                  <template #trigger>
+                    <NPopconfirm
+                      positive-text="Да"
+                      negative-text="Отмена"
+                      @positive-click="deleteProfile(user.id)"
+                    >
+                      <template #trigger>
+                        <NButton
+                          type="error"
+                        >
+                          <template #icon>
+                            <NIcon
+                              :component="TrashBin"
+                            />
+                          </template>
+                        </NButton>
+                      </template>
+
+                      <template #default>
+                        Вы уверены что хотите удалить пользователя?
+                      </template>
+                    </NPopconfirm>
+                  </template>
+                </NTooltip>
+              </template>
             </td>
           </tr>
         </tbody>

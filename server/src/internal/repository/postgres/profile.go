@@ -39,6 +39,18 @@ func (r *profileRepo) RedactProfile(ts transaction.Session, param profile.Redact
 	return sql_gen.ExecNamed(SqlxTx(ts), sqlQuery, param)
 }
 
+func (r *profileRepo) DeleteProfile(ts transaction.Session, userID int) error {
+	sqlQuery := `
+		UPDATE admin_panel_users
+		SET
+			deleted = true
+		WHERE u_id = $1
+	`
+
+	_, err := SqlxTx(ts).Exec(sqlQuery, userID)
+	return err
+}
+
 func (r *profileRepo) FindProfileByTGUserNameOrID(ts transaction.Session, userName string, TGID int64) (profile.User, error) {
 	sqlQuery := `
 		SELECT
@@ -69,6 +81,7 @@ func (r *profileRepo) LoadUsersProfile(ts transaction.Session) ([]profile.User, 
 			u.last_login
 		FROM admin_panel_users u
     	JOIN admin_panel_acces_rights ar ON (ar.ar_id = u.ar_id)
+		WHERE u.deleted = false
 		ORDER BY u.u_id DESC
 	`
 
@@ -88,6 +101,7 @@ func (r *profileRepo) FindProfileByID(ts transaction.Session, userID int) (profi
 		FROM admin_panel_users u
     	JOIN admin_panel_acces_rights ar ON (ar.ar_id = u.ar_id)
 		WHERE u.u_id = $1
+		AND u.deleted = false
 	`
 
 	return sql_gen.Get[profile.User](SqlxTx(ts), sqlQuery, userID)

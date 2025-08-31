@@ -12,6 +12,7 @@ import (
 type Profile interface {
 	CreateProfile(ts transaction.Session, param profile.CreateProfileParam) (int64, error)
 	RedactProfile(ts transaction.Session, param profile.RedactProfileParam) error
+	DeleteProfile(ts transaction.Session, userID int) error
 	FindProfileByTGUserNameOrID(ts transaction.Session, userName string, TGID int64) (profile.User, error)
 	FindProfileByID(ts transaction.Session, userID int) (profile.User, error)
 	FindUserDeviceIDList(ts transaction.Session, userID int) ([]string, error)
@@ -39,6 +40,8 @@ type TgBot interface {
 type AuthCache interface {
 	SetTempUserData(ctx context.Context, tempKey string, user profile.User) error
 	GetTempUserData(ctx context.Context, tempKey string) (profile.User, error)
+	SetDeletedUser(ctx context.Context, userID int) error
+	InUserDeletedCache(ctx context.Context, userID int) (bool, error)
 }
 
 type NotifyMessage interface {

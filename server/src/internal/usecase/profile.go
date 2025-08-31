@@ -69,6 +69,22 @@ func (u *Profile) RedactProfile(ctx context.Context, param profile.RedactProfile
 	return nil
 }
 
+func (u *Profile) DeleteProfile(ctx context.Context, userID int) error {
+	ts := transaction.MustGetSession(ctx)
+
+	if err := u.ri.Profile.DeleteProfile(ts, userID); err != nil {
+		u.log.Db.Errorln(u.logPrefix(), "не удалось удалить профиль: ", err)
+		return global.ErrInternalError
+	}
+
+	if err := u.ri.AuthCache.SetDeletedUser(ctx, userID); err != nil {
+		u.log.Db.Errorln(u.logPrefix(), "не удалось закешировать удаленного пользователя: ", err)
+		return global.ErrInternalError
+	}
+
+	return nil
+}
+
 func (u *Profile) CreateAuthUrlResponse() (profile.AuthUrlResponse, error) {
 	var result profile.AuthUrlResponse
 

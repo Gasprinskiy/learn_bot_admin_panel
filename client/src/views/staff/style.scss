@@ -7,4 +7,9 @@
     display: flex;
     justify-content: space-between;
   }
+
+  &__table-actions {
+    display: flex;
+    gap: 5px;
+  }
 }

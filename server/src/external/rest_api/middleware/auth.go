@@ -33,7 +33,7 @@ func (m *AuthMiddleware) CheckAccesToken() gin.HandlerFunc {
 
 		claims, err := m.jwtUsecase.ParseToken(token)
 		if err != nil {
-			gin_gen.HandleError(gctx, global.ErrExpired)
+			gin_gen.HandleError(gctx, err)
 			gctx.Abort()
 			return
 		}

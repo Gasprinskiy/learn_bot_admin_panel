@@ -3,7 +3,7 @@ import { shallowReactive, toRefs } from 'vue';
 import type { AccessRight } from '@/shared/types/profile';
 
 import type { UseProtectedRoutesState } from './types';
-import { RoutesByAccessRight } from './constants';
+import { ProtectedRoutes } from './constants';
 
 const state = shallowReactive<UseProtectedRoutesState>({
   protecredRoutes: [],
@@ -11,7 +11,15 @@ const state = shallowReactive<UseProtectedRoutesState>({
 
 export function useProtectedRoutes() {
   function setRoutesByAccesRight(accRight: AccessRight) {
-    state.protecredRoutes = RoutesByAccessRight[accRight] || [];
+    const routes = ProtectedRoutes.map((route) => {
+      if (!route.access_rights.includes(accRight)) {
+        route.disabled = true;
+      }
+
+      return route;
+    });
+
+    state.protecredRoutes = routes;
   }
 
   return {
