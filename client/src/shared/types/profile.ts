@@ -1,3 +1,5 @@
+import type { PartialBy } from '@/packages/types';
+
 export enum AccessRight {
   AccessRightFull = 'full_access',
   AccessRightManager = 'manager_access',
@@ -5,7 +7,7 @@ export enum AccessRight {
 }
 
 export interface User {
-  u_id: number;
+  id: number;
   first_name: string;
   last_name: string;
   tg_user_name: string;
@@ -38,3 +40,10 @@ export interface PasswordLoginResponse {
   access_right: AccessRight;
   uu_id: string;
 }
+
+export interface UserStaffInfo extends Omit<User, 'is_password_set'> {
+  last_login: string | null;
+  is_you: boolean;
+}
+
+export type CreateUserParam = PartialBy<Omit<User, 'is_password_set'>, 'access_right' | 'id'>;

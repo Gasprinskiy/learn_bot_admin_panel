@@ -8,6 +8,7 @@ export enum SubscriptionStatus {
 
 export enum PaymentTypeID {
   P2P = 1,
+  Payme = 2,
 }
 
 export interface BotUserProfile {

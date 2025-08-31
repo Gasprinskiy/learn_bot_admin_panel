@@ -16,6 +16,12 @@ var AccessRightCheckMap = map[AccessRight]struct{}{
 	AccessRightTeacher: {},
 }
 
+var AccessRightIDMap = map[AccessRight]int{
+	AccessRightFull:    1,
+	AccessRightManager: 2,
+	AccessRightTeacher: 3,
+}
+
 func (s *AccessRight) Scan(value any) error {
 	if b, ok := value.([]byte); ok {
 		*s = AccessRight(string(b))

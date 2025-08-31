@@ -11,7 +11,10 @@ type User struct {
 	TgUserName string              `json:"tg_user_name" db:"tg_user_name"`
 	TgID       sql_null.NullInt64  `json:"tg_id" db:"tg_id"`
 	Password   sql_null.NullString `json:"-" db:"password"`
+	LastLogin  sql_null.NullTime   `json:"last_login" db:"last_login"`
 	Access     AccessRight         `json:"access_right" db:"access_right"`
+	//
+	IsYou bool `json:"is_you"`
 }
 
 type UserFirstLoginAnswer struct {

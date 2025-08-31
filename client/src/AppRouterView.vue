@@ -51,7 +51,7 @@ router.beforeEach(checkAuthOnRouteChange);
     <div class="app-wrapper__scrollbar-container">
       <NScrollbar
         class="app-wrapper__scrollbar"
-        style="max-height: calc(100vh - 57px);"
+        style="max-height: calc(100vh - 61px);"
       >
         <RouterView />
       </NScrollbar>
@@ -77,7 +77,7 @@ router.beforeEach(checkAuthOnRouteChange);
   }
 
   &__scrollbar {
-    height: calc(100vh - 57px);
+    height: calc(100vh - 61px);
     padding-bottom: 10px;
 
     .n-scrollbar-content {

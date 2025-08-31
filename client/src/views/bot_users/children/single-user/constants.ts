@@ -7,4 +7,5 @@ export const UploadErrorMessagesByCode: Record<number, string> = {
 
 export const PaymentTypeNameByID: Record<PaymentTypeID, string> = {
   [PaymentTypeID.P2P]: 'Перевод на карту',
+  [PaymentTypeID.Payme]: 'Payme',
 };

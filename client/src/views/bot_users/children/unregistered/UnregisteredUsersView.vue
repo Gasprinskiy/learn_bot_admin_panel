@@ -6,6 +6,7 @@ import { onBeforeMount } from 'vue';
 import { dateToRuLocaleString } from '@/packages/chronos';
 
 import { useUsersList } from '../../composables/use_users_list';
+import { optionalResult } from '@/packages/words';
 
 const {
   data,
@@ -16,14 +17,6 @@ const {
   loadMoreUsers,
   printUsers,
 } = useUsersList();
-
-function optionalResult<T extends string | number | Date>(value: T, valueProxy?: (value: T) => string): string {
-  if (value === null) {
-    return '-';
-  }
-
-  return valueProxy ? valueProxy(value) : value.toString();
-}
 
 onBeforeMount(fetchUsers);
 </script>

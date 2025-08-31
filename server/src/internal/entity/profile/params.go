@@ -5,11 +5,29 @@ import (
 )
 
 type CreateProfileParam struct {
-	FirstName  string              `json:"first_name" db:"first_name"`
-	LastName   string              `json:"last_name" db:"last_name"`
-	TgUserName string              `json:"tg_user_name" db:"tg_user_name"`
-	TgID       sql_null.NullString `json:"tg_id" db:"tg_id"`
-	Access     AccessRight         `json:"access_right" db:"access_right"`
+	FirstName  string              `form:"first_name" db:"first_name"`
+	LastName   string              `form:"last_name" db:"last_name"`
+	TgUserName string              `form:"tg_user_name" db:"tg_user_name"`
+	TgID       sql_null.NullString `form:"tg_id" db:"tg_id"`
+	Access     AccessRight         `form:"access_right" db:"access_right"`
+	//
+	ArID int `form:"-" db:"ar_id"`
+}
+
+func (p *CreateProfileParam) SetAccesRightID() {
+	arID, exists := AccessRightIDMap[p.Access]
+	if !exists {
+		arID = AccessRightIDMap[AccessRightManager]
+	}
+
+	p.ArID = arID
+}
+
+type RedactProfileParam struct {
+	ID         int    `form:"id" db:"u_id"`
+	FirstName  string `form:"first_name" db:"first_name"`
+	LastName   string `form:"last_name" db:"last_name"`
+	TgUserName string `form:"tg_user_name" db:"tg_user_name"`
 }
 
 type PasswordLoginParam struct {

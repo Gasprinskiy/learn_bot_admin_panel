@@ -7,7 +7,7 @@ const createProfileRoute: ProtectedRoute = {
   path: '/staff',
   icon: WorkRound,
   text: 'Работники',
-  disabled: true,
+  // disabled: true,
 };
 
 // const teacherTasksRoute: ProtectedRoute = {

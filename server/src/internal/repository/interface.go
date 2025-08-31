@@ -6,16 +6,20 @@ import (
 	"learn_bot_admin_panel/internal/entity/profile"
 	"learn_bot_admin_panel/internal/entity/telegram"
 	"learn_bot_admin_panel/internal/transaction"
+	"time"
 )
 
 type Profile interface {
-	CreateProfile(ts transaction.Session, param profile.CreateProfileParam) (int, error)
+	CreateProfile(ts transaction.Session, param profile.CreateProfileParam) (int64, error)
+	RedactProfile(ts transaction.Session, param profile.RedactProfileParam) error
 	FindProfileByTGUserNameOrID(ts transaction.Session, userName string, TGID int64) (profile.User, error)
 	FindProfileByID(ts transaction.Session, userID int) (profile.User, error)
 	FindUserDeviceIDList(ts transaction.Session, userID int) ([]string, error)
 	CreateUserDeviceID(ts transaction.Session, userID int, deviceID string) error
 	SetProfilePassword(ts transaction.Session, userID int, password string) error
 	SetProfileTGID(ts transaction.Session, userID int, TGID int64) error
+	SetProfileLastLoginDate(ts transaction.Session, userID int, date time.Time) error
+	LoadUsersProfile(ts transaction.Session) ([]profile.User, error)
 }
 
 type BotUsers interface {

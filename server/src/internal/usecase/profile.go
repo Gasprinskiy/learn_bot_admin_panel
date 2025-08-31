@@ -45,9 +45,10 @@ func (u *Profile) logPrefix() string {
 	return "[profile]"
 }
 
-func (u *Profile) CreateProfile(ctx context.Context, param profile.CreateProfileParam) (int, error) {
+func (u *Profile) CreateProfile(ctx context.Context, param profile.CreateProfileParam) (int64, error) {
 	ts := transaction.MustGetSession(ctx)
 
+	param.SetAccesRightID()
 	ID, err := u.ri.Repository.Profile.CreateProfile(ts, param)
 	if err != nil {
 		u.log.Db.Errorln(u.logPrefix(), "не удалось создать новый профиль: ", err)
@@ -55,6 +56,17 @@ func (u *Profile) CreateProfile(ctx context.Context, param profile.CreateProfile
 	}
 
 	return ID, nil
+}
+
+func (u *Profile) RedactProfile(ctx context.Context, param profile.RedactProfileParam) error {
+	ts := transaction.MustGetSession(ctx)
+
+	if err := u.ri.Repository.Profile.RedactProfile(ts, param); err != nil {
+		u.log.Db.Errorln(u.logPrefix(), "не удалось отредактировать профиль: ", err)
+		return global.ErrInternalError
+	}
+
+	return nil
 }
 
 func (u *Profile) CreateAuthUrlResponse() (profile.AuthUrlResponse, error) {
@@ -195,6 +207,11 @@ func (u *Profile) CreateUserDeviceIDIfNotExists(ctx context.Context, userID int,
 		return global.ErrInternalError
 	}
 
+	if err := u.ri.Profile.SetProfileLastLoginDate(ts, userID, time.Now()); err != nil {
+		u.log.Db.WithFields(lf).Errorln(u.logPrefix(), "не удалось обновить дату последнего входа пользователя:", err)
+		return global.ErrInternalError
+	}
+
 	idMap := make(map[string]struct{}, len(deviceIDList))
 
 	for _, id := range deviceIDList {
@@ -236,6 +253,11 @@ func (u *Profile) OnPasswordLogin(ctx context.Context, param profile.PasswordLog
 
 	if !userInfo.IsPasswordSet() {
 		return zero, global.ErrNoData
+	}
+
+	if err := u.ri.Profile.SetProfileLastLoginDate(ts, userInfo.ID, time.Now()); err != nil {
+		u.log.Db.WithFields(lf).Errorln(u.logPrefix(), "не удалось обновить дату последнего входа пользователя:", err)
+		return zero, global.ErrInternalError
 	}
 
 	valid := passencoder.CheckHashPassword(userInfo.Password.String, param.Password)
@@ -346,4 +368,31 @@ func (u *Profile) GetUserCommonInfo(ctx context.Context, userID int) (profile.Us
 	}
 
 	return user.NewUserCommonInfo(), nil
+}
+
+func (u *Profile) FindProfileUsers(ctx context.Context, userID int) ([]profile.User, error) {
+	lf := logrus.Fields{
+		"u_id": userID,
+	}
+
+	ts := transaction.MustGetSession(ctx)
+
+	data, err := u.ri.Profile.LoadUsersProfile(ts)
+	switch err {
+	case nil:
+	case global.ErrNoData:
+		return nil, err
+
+	default:
+		u.log.Db.WithFields(lf).Errorln(u.logPrefix(), "не удалось найти пользователей:", err)
+		return nil, global.ErrInternalError
+	}
+
+	for i, user := range data {
+		if user.ID == userID {
+			data[i].IsYou = true
+		}
+	}
+
+	return data, nil
 }

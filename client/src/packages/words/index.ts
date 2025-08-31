@@ -12,3 +12,11 @@ export function pluralize(count: number, one: string, few: string, many: string)
 
   return many;
 }
+
+export function optionalResult<T extends string | number | Date>(value: T, valueProxy?: (value: T) => string): string {
+  if (value === null) {
+    return '-';
+  }
+
+  return valueProxy ? valueProxy(value) : value.toString();
+}
