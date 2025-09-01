@@ -8,6 +8,7 @@ import (
 	"io"
 	"learn_bot_admin_panel/config"
 	"learn_bot_admin_panel/internal/entity/bot_users"
+	"learn_bot_admin_panel/internal/entity/chanel_kicker"
 	"learn_bot_admin_panel/internal/entity/global"
 	"learn_bot_admin_panel/internal/transaction"
 	"learn_bot_admin_panel/rimport"
@@ -88,7 +89,15 @@ func (u *BotUsers) FindRegisteredUsers(
 	result := global.NewCommotListSearchResponse(data, data[0].CommonTotalCount, param.Limit, param.PageCount)
 
 	for i, user := range result.Data {
-		user.SetSubscriptionStatus(u.getUserSubscriptionStatus(user.SubscrPurchaseDate, user.SubscrTerm.GetInt()))
+		status := bot_users.SubscriptionStatusNotExists
+		if user.SubscrPurchaseDate.Valid {
+			if user.SubscrKickTime.Valid {
+				status = bot_users.SubscriptionStatusExpired
+			} else {
+				status = bot_users.SubscriptionStatusActive
+			}
+		}
+		user.SetSubscriptionStatus(status)
 		result.Data[i] = user
 	}
 
@@ -170,7 +179,12 @@ func (u *BotUsers) FindUserByID(ctx context.Context, id int) (bot_users.BotUserD
 	}
 
 	for i, purchase := range purchaseData {
-		purchase.SetSubscriptionStatus(u.getUserSubscriptionStatus(sql_null.NewNullTime(purchase.PurchaseTime), purchase.Term))
+		status := bot_users.SubscriptionStatusActive
+		if purchase.KickTime.Valid {
+			status = bot_users.SubscriptionStatusExpired
+		}
+
+		purchase.SetSubscriptionStatus(status)
 		purchaseData[i] = purchase
 	}
 
@@ -226,7 +240,6 @@ func (u *BotUsers) PurchaseSubscription(ctx context.Context, param bot_users.Pur
 		param.BotUserID,
 		chronos.BeginingOfNowLocal(),
 		sql_null.NullFloat64{},
-		sql_null.NullString{},
 		sql_null.NewInt64(param.ManagerID),
 		bot_users.PaymentTypeIDP2P,
 	)
@@ -272,4 +285,8 @@ func (u *BotUsers) PurchaseSubscription(ctx context.Context, param bot_users.Pur
 	}
 
 	return nil
+}
+
+func (u *BotUsers) CancelSubscrition(ctx context.Context, param chanel_kicker.KickUserParam) error {
+	return u.ri.Kicker.KickUser(param)
 }

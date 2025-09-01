@@ -7,6 +7,7 @@ import (
 	"learn_bot_admin_panel/external/rest_api/middleware"
 	"learn_bot_admin_panel/internal/entity/app_jwt"
 	"learn_bot_admin_panel/internal/entity/bot_users"
+	"learn_bot_admin_panel/internal/entity/chanel_kicker"
 	"learn_bot_admin_panel/internal/entity/global"
 	"learn_bot_admin_panel/internal/entity/profile"
 	"learn_bot_admin_panel/internal/transaction"
@@ -95,6 +96,13 @@ func NewBotUsersHandler(
 			handler.middleware.CheckAccesToken(),
 			handler.middleware.CheckAccessRight([]profile.AccessRight{profile.AccessRightFull, profile.AccessRightManager}),
 			handler.PostPurchase,
+		)
+
+		group.DELETE(
+			"/purchase/cancel",
+			handler.middleware.CheckAccesToken(),
+			handler.middleware.CheckAccessRight([]profile.AccessRight{profile.AccessRightFull, profile.AccessRightManager}),
+			handler.CancelSubscrition,
 		)
 	}
 }
@@ -304,4 +312,21 @@ func (h *BotUsersHandler) GetBotSubscriptionTypes(gctx *gin.Context) {
 	}
 
 	gctx.JSON(http.StatusOK, data)
+}
+
+func (h *BotUsersHandler) CancelSubscrition(gctx *gin.Context) {
+	var param chanel_kicker.KickUserParam
+
+	if err := gctx.ShouldBindQuery(&param); err != nil {
+		gin_gen.HandleError(gctx, global.ErrInvalidParam)
+		return
+	}
+
+	err := h.ui.BotUsers.CancelSubscrition(gctx.Request.Context(), param)
+	if err != nil {
+		gin_gen.HandleError(gctx, err)
+		return
+	}
+
+	gctx.JSON(http.StatusOK, gin.H{"success": true})
 }

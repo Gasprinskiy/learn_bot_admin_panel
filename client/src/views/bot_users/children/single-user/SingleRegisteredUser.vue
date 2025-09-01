@@ -1,12 +1,12 @@
 <script lang="ts" setup>
 import { computed, defineAsyncComponent, onBeforeMount, shallowRef } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { ImageOutline } from '@vicons/ionicons5';
-import { NButton, NIcon, NImage, NTable, NTag, useMessage } from 'naive-ui';
+import { EllipsisVertical, ImageOutline } from '@vicons/ionicons5';
+import { NButton, NDropdown, NIcon, NImage, NTable, NTag, useMessage } from 'naive-ui';
 
 import $api from '@/packages/api/client';
 import { SubscriptionStatus } from '@/shared/types/bot_users';
-import type { BotSubscriptionType, BotUserDetailData } from '@/shared/types/bot_users';
+import type { BotSubscriptionType, BotUserDetailData, SubscriptionCancelReason } from '@/shared/types/bot_users';
 import type { ResponseWithBoolStatus } from '@/shared/types/common';
 import { dateToRuLocaleString } from '@/packages/chronos';
 import { useModal } from '@/composables/use_modal';
@@ -15,9 +15,11 @@ import { pluralize } from '@/packages/words';
 import { useConfig } from '@/composables/use_config';
 
 import type { CreatePurchaseEmits, CreatePurchaseProps } from './components/create_purchase/types';
-import { PaymentTypeNameByID, UploadErrorMessagesByCode } from './constants';
+import { CacnelReasonLabelMap, CancelErrorMessagesByCode, DropdownOptions, PaymentTypeNameByID, UploadErrorMessagesByCode } from './constants';
 import { SubscriptionStatusTitleMap, SubscriptionUIStatus } from '../registered/constants';
 import { UserListTab } from '../../types';
+import { DropdownKey } from './types';
+import type { CancelPurchaseEmits } from './components/cancel_purchase/types';
 
 const route = useRoute();
 const router = useRouter();
@@ -75,6 +77,29 @@ async function uploadPurchase(sub_id: number, file: File) {
   }
 }
 
+async function cancelPurchase(reason: SubscriptionCancelReason) {
+  try {
+    const response = await $api('/bot_users/purchase/cancel', {
+      method: 'DELETE',
+      params: {
+        tg_id: user.value?.tg_id,
+        reason,
+      },
+    });
+
+    if (response.success) {
+      await getUserByID();
+      message.success('Подписка отменена');
+      closeModal();
+    } else {
+      message.error(UploadErrorMessagesByCode[500]);
+    }
+  } catch (e) {
+    const stauts = +(e as any).status || 500;
+    message.error(CancelErrorMessagesByCode[stauts]);
+  }
+}
+
 async function openCreatePurchaseModal() {
   const subscriptionTypes = await getSubscriptionTypes();
   if (subscriptionTypes === null) {
@@ -101,6 +126,41 @@ async function openCreatePurchaseModal() {
   });
 }
 
+function openCancelPurchaseModal() {
+  const component = defineAsyncComponent(() => {
+    return import('./components/cancel_purchase/CancelPurchase.vue');
+  });
+
+  const emits: ConvertEmitType<CancelPurchaseEmits> = {
+    onSubmit: cancelPurchase,
+  };
+
+  showModal({
+    component,
+    emits,
+    width: 500,
+  });
+}
+
+async function onChoseDropdownOption(key: DropdownKey) {
+  if (key === DropdownKey.CONNECTSUBS) {
+    if (hasActiveSub.value) {
+      message.error('У пользователя уже есть активная подписка');
+      return;
+    }
+
+    await openCreatePurchaseModal();
+    return;
+  }
+
+  if (!hasActiveSub.value) {
+    message.error('У пользователя нет активной подписки');
+    return;
+  }
+
+  openCancelPurchaseModal();
+}
+
 function getSubscriptionName(term_in_month: number, price: number): string {
   const plural = pluralize(term_in_month, 'месяц', 'месяца', 'месяцев');
   return `${term_in_month} ${plural} за ${price}`;
@@ -118,13 +178,23 @@ onBeforeMount(getUserByID);
       <h1>{{ user.first_name }} {{ user.last_name }}</h1>
 
       <div>
-        <NButton
-          v-if="!hasActiveSub"
-          type="primary"
-          @click="openCreatePurchaseModal"
+        <NDropdown
+          :options="DropdownOptions"
+          trigger="click"
+          @select="onChoseDropdownOption"
         >
-          Подключить подписку
-        </NButton>
+          <NButton
+            type="primary"
+            quaternary
+          >
+            <template #icon>
+              <NIcon
+                size="20"
+                :component="EllipsisVertical"
+              />
+            </template>
+          </NButton>
+        </NDropdown>
       </div>
     </div>
 
@@ -187,6 +257,16 @@ onBeforeMount(getUserByID);
             <tr>
               <td>Дата подключения</td>
               <td>{{ dateToRuLocaleString(purchase.p_time) }}</td>
+            </tr>
+
+            <tr v-if="purchase.kick_time">
+              <td>Дата исключения из канала</td>
+              <td>{{ dateToRuLocaleString(purchase.kick_time) }}</td>
+            </tr>
+
+            <tr v-if="purchase.kick_reason">
+              <td>Причина исключения из канала</td>
+              <td>{{ CacnelReasonLabelMap[purchase.kick_reason] }}</td>
             </tr>
 
             <tr>

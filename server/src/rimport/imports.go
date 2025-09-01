@@ -27,6 +27,7 @@ func NewRepositoryImports(
 			Profile:       postgres.NewProfile(),
 			BotUsers:      postgres.NewBotUsers(),
 			NotifyMessage: grpc_client.NewnotifyMessageGRPCRepository(grpcConn),
+			Kicker:        grpc_client.NewKicker(grpcConn),
 		},
 	}
 }

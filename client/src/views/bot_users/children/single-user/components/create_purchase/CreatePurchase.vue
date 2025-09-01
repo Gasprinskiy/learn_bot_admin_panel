@@ -86,6 +86,7 @@ async function onSubmit() {
             v-model:value="selectedType"
             :options="subscriptionTypeOptions"
             :status="typeValidationStatus"
+            placeholder="Тип подписки"
           />
 
           <span

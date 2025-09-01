@@ -71,6 +71,7 @@ async function deleteProfile(id: number) {
     await $api(`/panel_users/delete/${id}`, {
       method: 'DELETE',
     });
+    await fetchStaffList();
 
     message.warning('Пользователь удален');
   } catch (e) {

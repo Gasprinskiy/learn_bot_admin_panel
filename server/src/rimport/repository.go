@@ -8,4 +8,5 @@ type Repository struct {
 	TgBot         repository.TgBot
 	BotUsers      repository.BotUsers
 	NotifyMessage repository.NotifyMessage
+	Kicker        repository.Kicker
 }

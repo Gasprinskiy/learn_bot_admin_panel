@@ -6,6 +6,11 @@ export enum SubscriptionStatus {
   NOTEXISTS = 'not_exists',
 }
 
+export enum SubscriptionCancelReason {
+  EXPIRED = 1,
+  MONEYBACK = 2,
+}
+
 export enum PaymentTypeID {
   P2P = 1,
   Payme = 2,
@@ -47,6 +52,8 @@ export interface PurchaseData {
   p_id: number;
   sub_id: number;
   p_time: string;
+  kick_time: string | null;
+  kick_reason: SubscriptionCancelReason | null;
   payment_type_id: PaymentTypeID;
   discount: number | null;
   manager_id: number | null;

@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"learn_bot_admin_panel/internal/entity/bot_users"
+	"learn_bot_admin_panel/internal/entity/chanel_kicker"
 	"learn_bot_admin_panel/internal/entity/profile"
 	"learn_bot_admin_panel/internal/entity/telegram"
 	"learn_bot_admin_panel/internal/transaction"
@@ -46,4 +47,8 @@ type AuthCache interface {
 
 type NotifyMessage interface {
 	SendInviteLink(ctx context.Context, TGID int64) (bool, error)
+}
+
+type Kicker interface {
+	KickUser(param chanel_kicker.KickUserParam) error
 }

@@ -31,6 +31,7 @@ type BotUserProfile struct {
 	SubscrID           sql_null.NullInt64 `db:"sub_id" json:"subscription_id"`
 	SubscrPurchaseDate sql_null.NullTime  `db:"p_time" json:"-"`
 	SubscrTerm         sql_null.NullInt64 `db:"term_in_month" json:"subscription_term"`
+	SubscrKickTime     sql_null.NullTime  `db:"kick_time" json:"kick_time"`
 	//
 	SubscrStatus SubscriptionStatus `json:"subscription_status" excel_head:"Подписка" excel_cell:"string"`
 }
@@ -61,7 +62,6 @@ type Purchase struct {
 	UserID        int                  `db:"u_id"`
 	PurchaseTime  time.Time            `db:"p_time"`
 	Discount      sql_null.NullFloat64 `db:"discount"`
-	ReceiptJSON   sql_null.NullString  `db:"receipt_json"`
 	ManagerID     sql_null.NullInt64   `db:"manager_id"`
 	PaymentTypeID int                  `db:"payment_type_id"`
 }
@@ -70,6 +70,8 @@ type BotUserPurchase struct {
 	PID              int                  `db:"p_id" json:"p_id"`
 	SubID            int                  `db:"sub_id" json:"sub_id"`
 	PurchaseTime     time.Time            `db:"p_time" json:"p_time"`
+	KickTime         sql_null.NullTime    `db:"kick_time" json:"kick_time"`
+	KickReason       sql_null.NullInt64   `db:"kick_reason" json:"kick_reason"`
 	PaymentTypeID    int                  `db:"payment_type_id" json:"payment_type_id"`
 	Discount         sql_null.NullFloat64 `db:"discount" json:"discount"`
 	ManagerID        sql_null.NullInt64   `db:"manager_id" json:"manager_id"`
@@ -90,7 +92,6 @@ func NewPurchase(
 	subID, userID int,
 	pTime time.Time,
 	discount sql_null.NullFloat64,
-	receiptJSON sql_null.NullString,
 	managerID sql_null.NullInt64,
 	paymentTypeID int,
 ) Purchase {
@@ -99,7 +100,6 @@ func NewPurchase(
 		UserID:        userID,
 		PurchaseTime:  pTime,
 		Discount:      discount,
-		ReceiptJSON:   receiptJSON,
 		ManagerID:     managerID,
 		PaymentTypeID: paymentTypeID,
 	}

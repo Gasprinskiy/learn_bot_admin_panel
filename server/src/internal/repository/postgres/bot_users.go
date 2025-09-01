@@ -62,10 +62,14 @@ func (r *botUsers) FindBotRegisteredUsers(ts transaction.Session, param bot_user
 				bu.register_date,
 				bp.sub_id,
 				bp.p_time,
+				bp.kick_time,
 				bst.term_in_month
 			FROM bot_users_profile bu
 				LEFT JOIN LATERAL (
-					SELECT bp.sub_id, bp.p_time
+					SELECT
+						bp.sub_id,
+						bp.p_time,
+						bp.kick_time
 					FROM bot_users_purchases bp
 					WHERE bp.u_id = bu.u_id
 					ORDER BY bp.p_id DESC
@@ -88,6 +92,7 @@ func (r *botUsers) FindBotRegisteredUsers(ts transaction.Session, param bot_user
 			data.sub_id,
 			data.p_time,
 			data.term_in_month,
+			data.kick_time,
 			(SELECT COUNT(*) FROM filtered) AS total_count
 		FROM (
 			SELECT
@@ -102,6 +107,7 @@ func (r *botUsers) FindBotRegisteredUsers(ts transaction.Session, param bot_user
 				f.register_date,
 				f.sub_id,
 				f.p_time,
+				f.kick_time,
 				f.term_in_month
 			FROM filtered f
 			%s
@@ -243,6 +249,8 @@ func (r *botUsers) FindUserPurchases(ts transaction.Session, userID int) ([]bot_
 			up.manager_id,
 			up.payment_type_id,
 			up.receipt_file_name,
+			up.kick_time,
+			up.kick_reason,
 			st.term_in_month,
 			st.price,
 			ps.first_name as manager_first_name,
@@ -273,9 +281,9 @@ func (r *botUsers) LoadAllBotSubscriptionTypes(ts transaction.Session) ([]bot_us
 func (r *botUsers) CreateSubscriptionPurchase(ts transaction.Session, param bot_users.Purchase) (int64, error) {
 	sqlQuery := `
 	INSERT INTO bot_users_purchases
-		(sub_id, u_id, p_time, discount, receipt_json, manager_id, payment_type_id)
+		(sub_id, u_id, p_time, discount, manager_id, payment_type_id)
 	VALUES
-		(:sub_id, :u_id, :p_time, :discount, :receipt_json, :manager_id, :payment_type_id)
+		(:sub_id, :u_id, :p_time, :discount, :manager_id, :payment_type_id)
 	RETURNING p_id
 	`
 
